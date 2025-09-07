@@ -18,6 +18,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust proxy when deployed (Vercel)
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+  app.set('trust proxy', 1);
+}
+
 initializeSupabase();
 
 testConnection().catch(error => {
@@ -99,6 +104,15 @@ app.get('/health', (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development'
   });
+});
+
+// Handle favicon requests to prevent 404 errors
+app.get('/favicon.ico', (req, res) => {
+  res.status(204).end();
+});
+
+app.get('/favicon.png', (req, res) => {
+  res.status(204).end();
 });
 
 // API Routes
