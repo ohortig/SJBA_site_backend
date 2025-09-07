@@ -27,10 +27,10 @@ initializeSupabase();
 
 testConnection().catch(error => {
   logger.error({
-    message: 'Failed to connect to Supabase',
+    message: 'Failed to connect to Supabase during startup - will retry on first request',
     error: error.message
   });
-  process.exit(1);
+  // Don't exit the process - let the server start and handle errors per-request
 });
 
 // Security middleware

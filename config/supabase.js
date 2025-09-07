@@ -34,7 +34,7 @@ export const initializeSupabase = () => {
           fetch: (...args) => {
             // Add timeout for serverless environments
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for serverless
             
             return fetch(args[0], {
               ...args[1],
@@ -86,15 +86,17 @@ export const testConnection = async () => {
     return true;
   } catch (error) {
     // Check if it's a network/timeout error vs configuration error
-    if (error.message.includes('fetch failed') || error.message.includes('timeout')) {
+    if (error.name === 'AbortError' || error.message.includes('fetch failed') || error.message.includes('timeout')) {
       logger.warn({
         message: 'Supabase connection test failed due to network/timeout',
-        error: error.message
+        error: error.message,
+        errorType: error.name
       });
     } else {
       logger.error({
         message: 'Supabase connection test failed',
-        error: error.message
+        error: error.message,
+        errorType: error.name
       });
     }
     throw error;
