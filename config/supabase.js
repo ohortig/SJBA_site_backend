@@ -5,11 +5,21 @@ let supabase = null;
 
 export const initializeSupabase = () => {
   if (!process.env.SUPABASE_URL) {
-    throw new Error('SUPABASE_URL is required but not provided');
+    const error = new Error('SUPABASE_URL is required but not provided');
+    logger.error({
+      message: 'Missing Supabase configuration',
+      error: error.message
+    });
+    throw error;
   }
   
   if (!process.env.SUPABASE_ANON_KEY) {
-    throw new Error('SUPABASE_ANON_KEY is required but not provided');
+    const error = new Error('SUPABASE_ANON_KEY is required but not provided');
+    logger.error({
+      message: 'Missing Supabase configuration',
+      error: error.message
+    });
+    throw error;
   }
 
   try {
@@ -19,12 +29,25 @@ export const initializeSupabase = () => {
       {
         auth: {
           persistSession: false // Server-side doesn't need session persistence
+        },
+        global: {
+          fetch: (...args) => {
+            // Add timeout for serverless environments
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+            
+            return fetch(args[0], {
+              ...args[1],
+              signal: controller.signal
+            }).finally(() => clearTimeout(timeoutId));
+          }
         }
       }
     );
 
     logger.info({
-      message: 'Supabase client initialized successfully'
+      message: 'Supabase client initialized successfully',
+      url: process.env.SUPABASE_URL ? `${process.env.SUPABASE_URL.substring(0, 20)}...` : 'undefined'
     });
     return supabase;
   } catch (error) {
@@ -62,10 +85,18 @@ export const testConnection = async () => {
     });
     return true;
   } catch (error) {
-    logger.error({
-      message: 'Supabase connection test failed',
-      error: error.message
-    });
+    // Check if it's a network/timeout error vs configuration error
+    if (error.message.includes('fetch failed') || error.message.includes('timeout')) {
+      logger.warn({
+        message: 'Supabase connection test failed due to network/timeout',
+        error: error.message
+      });
+    } else {
+      logger.error({
+        message: 'Supabase connection test failed',
+        error: error.message
+      });
+    }
     throw error;
   }
 };
