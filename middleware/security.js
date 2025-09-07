@@ -6,9 +6,19 @@ const validateReferer = (req, res, next) => {
 
   const referer = req.get('Referer') || req.get('Origin');
 
+  // Allow requests with no referer (like curl, direct API calls, etc.)
+  if (!referer) {
+    return next();
+  }
+
   const allowedDomains = [
     process.env.FRONTEND_DOMAIN,
   ].filter(Boolean);
+
+  // If no allowed domains are configured, allow all requests
+  if (allowedDomains.length === 0) {
+    return next();
+  }
 
   const isAllowed = allowedDomains.some(domain => {
     return referer.includes(domain);
