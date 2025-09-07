@@ -1,242 +1,155 @@
-# Backend API Integration
+# Stern Jewish Business Association Backend API
 
-This directory contains the Axios-based API client and data services for connecting to the SJBA backend.
+A secure and scalable Node.js/Express backend API for the Stern Jewish Business Association website.
 
-### Project Structure
+🌐 **Live API**: [sjba-site-backend.vercel.app](https://sjba-site-backend.vercel.app)
+📊 **Frontend**: [sjba-site.vercel.app](https://sjba-site.vercel.app)
 
-```
-/
-├── config/
-│   └── supabase.js     # Supabase client configuration
-├── database/
-│   └── schema.sql      # PostgreSQL schema
-├── middleware/
-│   ├── errorHandler.js # Error handling middleware
-│   └── security.js    # Security middleware
-├── models/
-│   ├── BoardMember.js  # Board member model
-│   ├── Event.js       # Event model
-│   └── NewsletterSignup.js # Newsletter model
-├── routes/
-│   ├── boardMembers.js # Board member routes
-│   ├── events.js      # Event routes
-│   └── newsletter.js  # Newsletter routes
-├── server.js          # Main server file
-├── package.json       # Dependencies and scripts
-└── env.example        # Environment template
-```
+## Tech Stack
 
-## Features
-
-- ✅ **Axios HTTP Client** - Modern, promise-based HTTP client with interceptors
-- ✅ **Domain-Based Security** - Secure public API access without exposed secrets
-- ✅ **Request/Response Interceptors** - Global error handling and request logging
-- ✅ **Automatic Error Transformation** - Custom ApiError class with detailed error information
-- ✅ **Request Timeouts** - 10-second timeout for all requests
-- ✅ **TypeScript Support** - Full type safety for all API calls
-- ✅ **Response Time Logging** - Debug performance with automatic timing
-
-## Security Approach
-
-⚠️ **Important**: Frontend applications cannot securely store API keys or secrets. Instead, this implementation uses:
-
-1. **CORS Protection** - Backend restricts origins to your domain
-2. **Rate Limiting** - Backend limits requests per IP
-3. **Referer Checking** - Backend validates requests come from your site
-4. **Public API Design** - Endpoints designed for public consumption
-
-## Environment Variables
-
-Add this to your `.env` file:
-
-```env
-VITE_BACKEND_URL=https://your-backend-url.com
-# Note: No API key needed - frontend apps cannot securely store secrets
-```
-
-## Usage Examples
-
-### Board Members
-
-```typescript
-import { boardMembersService } from '@/api/dataService';
-
-// Get all board members
-const members = await boardMembersService.getAll();
-
-// Get specific board member
-const member = await boardMembersService.getById('member-id');
-```
-
-### Newsletter Signup
-
-```typescript
-import { newsletterService } from '@/api/dataService';
-
-// Sign up for newsletter
-const result = await newsletterService.signup({
-  email: 'user@example.com',
-  firstName: 'John',
-  lastName: 'Doe',
-  source: 'homepage'
-});
-```
-
-### Events
-
-```typescript
-import { eventsService } from '@/api/dataService';
-
-// Get paginated events
-const { events, pagination } = await eventsService.getAll({
-  page: 1,
-  limit: 10,
-  isPublic: true
-});
-
-// Get upcoming events
-const upcoming = await eventsService.getUpcoming(5);
-
-// Search events
-const { events: searchResults } = await eventsService.search('hackathon');
-
-// Get specific event
-const event = await eventsService.getById('event-id');
-```
-
-### Error Handling
-
-The Axios client provides enhanced error handling with automatic transformation:
-
-```typescript
-import { ApiError } from '@/api/client';
-
-try {
-  const members = await boardMembersService.getAll();
-} catch (error) {
-  if (error instanceof ApiError) {
-    console.error(`API Error ${error.status}: ${error.message}`);
-    
-    // Handle specific error types
-    if (error.status === 401) {
-      // Handle authentication error
-      redirectToLogin();
-    } else if (error.status === 0) {
-      // Handle network error
-      showNetworkErrorMessage();
-    } else if (error.status >= 500) {
-      // Handle server errors
-      showServerErrorMessage();
-    }
-    
-    // Access error code if provided by backend
-    if (error.code) {
-      console.error('Error code:', error.code);
-    }
-  } else {
-    console.error('Unexpected error:', error);
-  }
-}
-```
-
-### Advanced Features
-
-```typescript
-import { apiClient } from '@/api/client';
-
-// Get the underlying axios instance for advanced usage
-const axiosInstance = apiClient.getAxiosInstance();
-
-// Add custom interceptors
-axiosInstance.interceptors.request.use((config) => {
-  // Add loading spinner
-  showLoadingSpinner();
-  return config;
-});
-
-axiosInstance.interceptors.response.use(
-  (response) => {
-    // Hide loading spinner
-    hideLoadingSpinner();
-    return response;
-  },
-  (error) => {
-    hideLoadingSpinner();
-    return Promise.reject(error);
-  }
-);
-```
+- **Runtime**: Node.js (v18+)
+- **Framework**: Express.js
+- **Database**: Supabase (PostgreSQL)
+- **Security**: Helmet, CORS, Rate Limiting
+- **Logging**: Pino with structured logging
+- **Validation**: Express Validator
+- **Deployment**: Vercel (Serverless)
+- **Environment**: ESM (ES Modules)
 
 ## API Endpoints
 
-- `GET api/v1/board-members` - Get all board members
-- `POST api/v1/newsletter-sign-ups` - Sign up for newsletter
-- `GET api/v1/events` - Get paginated events with optional filtering
+### Public Endpoints
+- `GET /api/v1/board-members` - Get all board members
+- `GET /api/v1/board-members/:id` - Get specific board member
+- `POST /api/v1/newsletter-sign-ups` - Subscribe to newsletter
+- `GET /api/v1/events` - Get upcoming events
+- `GET /health` - Health check endpoint
 
-## Axios Benefits Over Fetch
+### System Endpoints
+- `GET /` - API information and status
+- `GET /api/v1` - API documentation
 
-✅ **Request/Response Interceptors** - Global handling of auth, loading states, errors  
-✅ **Automatic JSON Handling** - No manual `response.json()` calls  
-✅ **Better Error Information** - Rich error objects with request/response details  
-✅ **Request/Response Transformation** - Automatic data transformation  
-✅ **Timeout Support** - Built-in request timeouts (10s default)  
-✅ **Request Cancellation** - Easy to cancel requests (extensible)  
-✅ **Instance Configuration** - Reusable configuration across requests  
-✅ **Wide Browser Support** - Works in older browsers
+## Local Development
 
-## Backend Security Recommendations
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm or yarn
+- Git
+- Supabase account and project
 
-Configure your backend with these security measures:
+### Setup Instructions
 
-### 1. CORS Configuration
-```javascript
-// Express.js example
-app.use(cors({
-  origin: [
-    'https://yourdomain.com', 
-    'https://www.yourdomain.com',
-    'http://localhost:3000' // for development
-  ],
-  credentials: true
-}));
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/ohortig/SJBA_site_backend.git
+   cd SJBA_site_backend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Environment Configuration**
+   
+   Create a `.env` file in the root directory and add:
+   ```env
+   # Supabase Configuration
+   SUPABASE_URL=your_supabase_project_url
+   SUPABASE_ANON_KEY=your_supabase_anon_key
+   
+   # Frontend Configuration
+   FRONTEND_URL=http://localhost:5173
+   
+   # Server Configuration
+   PORT=3000
+   NODE_ENV=development
+   ```
+   
+   **Environment Values:**
+   - **SUPABASE_URL**: Your Supabase project URL (from Supabase dashboard)
+   - **SUPABASE_ANON_KEY**: Your Supabase anonymous key (from Supabase dashboard)
+   - **FRONTEND_URL**: Frontend URL for CORS configuration
+     - **Development**: `http://localhost:5173`
+     - **Production**: `https://sjba-site.vercel.app`
+
+4. **Start development server**
+   ```bash
+   npm run dev
+   ```
+   
+   The API will be available at `http://localhost:3000`
+
+### Available Scripts
+
+- `npm run dev` - Start development server with nodemon
+- `npm start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run lint:fix` - Run ESLint with auto-fix
+- `npm test` - Run Jest tests
+- `npm run seed` - Seed database with sample data
+- `npm run seed:clear` - Clear database
+
+## Project Structure
+
+```
+/
+├── api/
+│   └── index.js          # Vercel serverless entry point
+├── config/
+│   ├── index.js          # Configuration exports
+│   └── supabase.js       # Supabase client configuration
+├── middleware/
+│   ├── errorHandler.js   # Global error handling
+│   ├── security.js       # Security and validation middleware
+│   └── index.js          # Middleware exports
+├── models/
+│   ├── BoardMember.js    # Board member data model
+│   ├── Event.js          # Event data model
+│   ├── NewsletterSignup.js # Newsletter subscription model
+│   └── index.js          # Model exports
+├── routes/
+│   ├── boardMembers.js   # Board member API routes
+│   ├── events.js         # Event API routes
+│   ├── newsletter.js     # Newsletter API routes
+│   └── index.js          # Route exports
+├── logger.js             # Structured logging configuration
+├── server.js             # Main Express application
+├── vercel.json           # Vercel deployment configuration
+└── package.json          # Dependencies and scripts
 ```
 
-### 2. Rate Limiting
-```javascript
-const rateLimit = require('express-rate-limit');
+## Database Schema
 
-app.use('/api', rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP'
-}));
-```
+The API uses Supabase (PostgreSQL) with the following main tables:
+- `board_members` - Board member profiles and information
+- `newsletter_signups` - Email newsletter subscriptions
+- `events` - Upcoming events and announcements
 
-### 3. Referer Validation
-```javascript
-app.use('/api', (req, res, next) => {
-  const referer = req.get('Referer');
-  const allowedDomains = ['yourdomain.com'];
-  
-  if (!referer || !allowedDomains.some(domain => referer.includes(domain))) {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  next();
-});
-```
+## Deployment
 
-### 4. Additional Security
-- ✅ Use HTTPS in production
-- ✅ Implement request size limits
-- ✅ Add request logging and monitoring
-- ✅ Use helmet.js for security headers
-- ✅ Validate and sanitize all inputs
-- ✅ Consider API versioning (`/api/v1/`)
+This API is deployed on Vercel as a serverless function.
 
-### 5. Public API Design
-Since this is a public website, design your endpoints to be safely public:
-- ✅ Board members (public information)
-- ✅ Public events (public information)  
-- ✅ Newsletter signup (accepts public submissions)
-- ❌ Avoid exposing sensitive admin data
-- ❌ Avoid endpoints that modify critical data
+### Production Environment Variables
+Set the following in your Vercel dashboard:
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `FRONTEND_URL`
+- `NODE_ENV=production`
+
+## Contributing
+
+This project is actively maintained by the SJBA tech team. To contribute:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Contact
+
+Omer Hortig  
+📧 Email: [oh2065@nyu.edu](mailto:oh2065@nyu.edu)
+
+Feel free to reach out to report bugs, ask questions, or inquire about joining the development team.
