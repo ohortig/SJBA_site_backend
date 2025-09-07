@@ -12,7 +12,7 @@ const validateReferer = (req, res, next) => {
   }
 
   const allowedDomains = [
-    process.env.FRONTEND_DOMAIN,
+    process.env.FRONTEND_URL,
   ].filter(Boolean);
 
   // If no allowed domains are configured, allow all requests

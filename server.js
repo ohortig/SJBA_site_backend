@@ -73,6 +73,11 @@ const corsOptions = {
     if (allowedOrigins.some(allowed => origin.includes(allowed.replace(/^https?:\/\//, '')))) {
       callback(null, true);
     } else {
+      logger.warn({
+        message: 'CORS blocked request',
+        origin: origin,
+        allowedOrigins: allowedOrigins
+      });
       callback(new Error('Not allowed by CORS'));
     }
   },
