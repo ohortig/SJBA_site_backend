@@ -97,6 +97,20 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use('/api', validateReferer);
 
+// Root route for Vercel health checks and screenshots
+app.get('/', (req, res) => {
+  res.json({
+    name: 'SJBA API',
+    version: '0.5.0',
+    status: 'running',
+    description: 'Backend API for SJBA website',
+    endpoints: {
+      health: '/health',
+      api: '/api/v1'
+    }
+  });
+});
+
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'healthy',
