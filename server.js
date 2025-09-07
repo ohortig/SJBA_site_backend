@@ -175,14 +175,17 @@ process.on('unhandledRejection', (reason, promise) => {
   gracefulShutdown('UNHANDLED_REJECTION');
 });
 
-server = app.listen(PORT, () => {
-  logger.info({
-    message: `SJBA Backend server running on port ${PORT}`,
-    environment: process.env.NODE_ENV || 'development',
-    database: 'Supabase PostgreSQL',
-    healthCheck: `http://localhost:${PORT}/health`,
-    apiInfo: `http://localhost:${PORT}/api/v1`
+// Only start server if not in Vercel (serverless) environment
+if (process.env.VERCEL !== '1') {
+  server = app.listen(PORT, () => {
+    logger.info({
+      message: `SJBA Backend server running on port ${PORT}`,
+      environment: process.env.NODE_ENV || 'development',
+      database: 'Supabase PostgreSQL',
+      healthCheck: `http://localhost:${PORT}/health`,
+      apiInfo: `http://localhost:${PORT}/api/v1`
+    });
   });
-});
+}
 
 export default app;
