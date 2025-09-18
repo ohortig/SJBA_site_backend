@@ -6,13 +6,9 @@ class NewsletterSignup {
     this.email = data.email;
     this.firstName = data.first_name;
     this.lastName = data.last_name;
-    this.source = data.source;
-    this.isActive = data.is_active;
-    this.unsubscribedAt = data.unsubscribed_at;
-    this.ipAddress = data.ip_address;
-    this.userAgent = data.user_agent;
-    this.createdAt = data.created_at;
-    this.updatedAt = data.updated_at;
+    this.year = data.year;
+    this.college = data.college;
+    this.createdAt = new Date().toISOString();
   }
 
   // Convert database row to model instance
@@ -27,36 +23,22 @@ class NewsletterSignup {
       email: this.email,
       first_name: this.firstName,
       last_name: this.lastName,
-      source: this.source,
-      is_active: this.isActive,
-      unsubscribed_at: this.unsubscribedAt,
-      ip_address: this.ipAddress,
-      user_agent: this.userAgent
+      year: this.year,
+      college: this.college,
+      created_at: this.createdAt
     };
   }
 
-  // Convert to JSON for API response (excludes sensitive data)
   toJSON() {
     return {
       id: this.id,
       email: this.email,
       firstName: this.firstName,
       lastName: this.lastName,
-      source: this.source,
-      isActive: this.isActive,
-      unsubscribedAt: this.unsubscribedAt,
-      createdAt: this.createdAt,
-      updatedAt: this.updatedAt,
-      fullName: this.getFullName()
+      year: this.year,
+      college: this.college,
+      createdAt: this.createdAt
     };
-  }
-
-  // Get full name
-  getFullName() {
-    if (this.firstName && this.lastName) {
-      return `${this.firstName} ${this.lastName}`;
-    }
-    return this.firstName || this.lastName || '';
   }
 
   // Validation
@@ -74,6 +56,22 @@ class NewsletterSignup {
       }
     }
 
+    if (!this.firstName || this.firstName.trim().length === 0) {
+      errors.push('First name is required');
+    }
+
+    if (!this.lastName || this.lastName.trim().length === 0) {
+      errors.push('Last name is required');
+    }
+
+    if (!this.year || this.year.trim().length === 0) {
+      errors.push('Year is required');
+    }
+
+    if (!this.college || this.college.trim().length === 0) {
+      errors.push('College is required');
+    }
+
     if (this.firstName && this.firstName.length > 50) {
       errors.push('First name cannot exceed 50 characters');
     }
@@ -82,21 +80,17 @@ class NewsletterSignup {
       errors.push('Last name cannot exceed 50 characters');
     }
 
-    if (this.source && !['homepage', 'about', 'events', 'contact', 'other'].includes(this.source)) {
-      errors.push('Invalid source value');
+    if (this.year && this.year.length > 50) {
+      errors.push('Year cannot exceed 50 characters');
+    }
+
+    if (this.college && this.college.length > 50) {
+      errors.push('College cannot exceed 50 characters');
     }
 
     return errors;
   }
 
-  // Instance method to unsubscribe
-  async unsubscribe() {
-    this.isActive = false;
-    this.unsubscribedAt = new Date().toISOString();
-    return await this.save();
-  }
-
-  // Static methods for database operations
   static async findByEmail(email) {
     const supabase = getSupabase();
 
@@ -141,14 +135,6 @@ class NewsletterSignup {
     // Normalize email
     if (signup.email) {
       signup.email = signup.email.toLowerCase().trim();
-    }
-
-    // Set defaults
-    if (!signup.source) {
-      signup.source = 'homepage';
-    }
-    if (signup.isActive === undefined) {
-      signup.isActive = true;
     }
 
     // Validate
@@ -261,15 +247,10 @@ class NewsletterSignup {
 
   static async count(options = {}) {
     const supabase = getSupabase();
-    const { active } = options;
 
     let query = supabase
       .from('newsletter_signups')
       .select('*', { count: 'exact', head: true });
-
-    if (active !== undefined) {
-      query = query.eq('is_active', active);
-    }
 
     const { count, error } = await query;
 
@@ -283,31 +264,13 @@ class NewsletterSignup {
   static async getStats() {
     const supabase = getSupabase();
 
-    // Get total counts
-    const [totalResult, activeResult, unsubscribedResult] = await Promise.all([
+    const [totalResult] = await Promise.all([
       supabase.from('newsletter_signups').select('*', { count: 'exact', head: true }),
-      supabase.from('newsletter_signups').select('*', { count: 'exact', head: true }).eq('is_active', true),
-      supabase.from('newsletter_signups').select('*', { count: 'exact', head: true }).eq('is_active', false)
     ]);
 
-    if (totalResult.error || activeResult.error || unsubscribedResult.error) {
+    if (totalResult.error) {
       throw new Error('Failed to fetch newsletter statistics');
     }
-
-    // Get signups by source
-    const { data: sourceData, error: sourceError } = await supabase
-      .from('newsletter_signups')
-      .select('source')
-      .eq('is_active', true);
-
-    if (sourceError) {
-      throw new Error('Failed to fetch signup sources');
-    }
-
-    const signupsBySource = sourceData.reduce((acc, row) => {
-      acc[row.source] = (acc[row.source] || 0) + 1;
-      return acc;
-    }, {});
 
     // Get recent signups (last 30 days)
     const thirtyDaysAgo = new Date();
@@ -316,7 +279,6 @@ class NewsletterSignup {
     const { count: recentSignups, error: recentError } = await supabase
       .from('newsletter_signups')
       .select('*', { count: 'exact', head: true })
-      .eq('is_active', true)
       .gte('created_at', thirtyDaysAgo.toISOString());
 
     if (recentError) {
@@ -325,10 +287,7 @@ class NewsletterSignup {
 
     return {
       total: totalResult.count,
-      active: activeResult.count,
-      unsubscribed: unsubscribedResult.count,
       recentSignups,
-      signupsBySource: Object.entries(signupsBySource).map(([source, count]) => ({ source, count }))
     };
   }
 }

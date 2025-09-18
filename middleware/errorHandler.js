@@ -33,7 +33,7 @@ const errorHandler = (err, req, res, next) => {
     error: {
       message: error.message || 'Server Error',
       code: error.code || 'INTERNAL_SERVER_ERROR',
-      ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+      reqBody: req.body
     }
   });
 };

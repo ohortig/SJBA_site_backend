@@ -30,35 +30,37 @@ const handleValidationErrors = (req, res, next) => {
   @access  Public
 */
 
-/*
- id uuid not null default gen_random_uuid (),
-  created_at timestamp with time zone not null default now(),
-  first_name character varying not null,
-  last_name character varying not null,
-  year character varying not null,
-  college character varying not null,
-  email character varying not null,
-*/
-
 router.post('/', [
   body('email')
     .isEmail()
     .normalizeEmail()
     .withMessage('Please provide a valid email address'),
-  body('firstName')
+  body('first_name')
+    .notEmpty()
+    .withMessage('First name is required')
     .trim()
     .isLength({ max: 50 })
     .withMessage('First name must be less than 50 characters'),
-  body('lastName')
+  body('last_name')
+    .notEmpty()
+    .withMessage('Last name is required')
     .trim()
     .isLength({ max: 50 })
     .withMessage('Last name must be less than 50 characters'),
+  body('year')
+    .notEmpty()
+    .withMessage('Year is required')
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Year must be less than 50 characters'),
   body('college')
+    .notEmpty()
+    .withMessage('College is required')
     .trim()
     .isLength({ max: 50 })
     .withMessage('College must be less than 50 characters'),
 ], handleValidationErrors, asyncHandler(async (req, res) => {
-  const { email, firstName, lastName, year, college } = req.body;
+  const { email, first_name, last_name, year, college } = req.body;
 
   // Check if email already exists
   const existingSignup = await NewsletterSignup.findByEmail(email);
@@ -74,8 +76,8 @@ router.post('/', [
   } else {
     const signupData = {
       email,
-      firstName,
-      lastName,
+      first_name,
+      last_name,
       year,
       college
     };
