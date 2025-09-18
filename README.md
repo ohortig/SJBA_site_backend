@@ -71,7 +71,7 @@ A secure and scalable Node.js/Express backend API for the Stern Jewish Business 
    - **SUPABASE_ANON_KEY**: Your Supabase anonymous key (from Supabase dashboard)
    - **FRONTEND_URL**: Frontend URL for CORS configuration
      - **Development**: `http://localhost:5173`
-     - **Production**: `https://sjba-site.vercel.app`
+     - **Production**: `https://www.nyu-sjba.org`
 
 4. **Start development server**
    ```bash
