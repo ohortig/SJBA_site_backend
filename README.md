@@ -3,7 +3,7 @@
 A secure and scalable Node.js/Express backend API for the Stern Jewish Business Association website.
 
 🌐 **Live API**: [sjba-site-backend.vercel.app](https://sjba-site-backend.vercel.app)
-📊 **Frontend**: [sjba-site.vercel.app](https://sjba-site.vercel.app)
+📊 **Live Frontend**: [nyu-sjba.org](https://www.nyu-sjba.org)
 
 ## Tech Stack
 
