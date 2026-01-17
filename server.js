@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
-import morgan from 'morgan';
+
 import dotenv from 'dotenv';
 
 import { initializeSupabase, testConnection } from './config/supabase.js';
@@ -11,7 +11,7 @@ import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 
 import { boardMembersRoutes, newsletterRoutes, eventsRoutes } from './routes/index.js';
 
-import { logger } from './logger.js';
+import { logger, httpLogger } from './logger.js';
 
 dotenv.config();
 
@@ -65,7 +65,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     // Allow requests with no origin (like curl requests)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       process.env.FRONTEND_URL,
     ].filter(Boolean);
@@ -84,8 +84,8 @@ const corsOptions = {
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
+    'Content-Type',
+    'Authorization',
     'X-Requested-With',
     'Cache-Control',
     'Accept',
@@ -101,12 +101,8 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Logging
-if (process.env.NODE_ENV === 'production') {
-  app.use(morgan('combined'));
-} else {
-  app.use(morgan('dev'));
-}
+// HTTP request logging
+app.use(httpLogger);
 
 app.use('/api', validateReferer);
 
@@ -183,7 +179,7 @@ const gracefulShutdown = (signal) => {
         })
         process.exit(1);
       }
-      
+
       logger.info({
         message: 'Server shut down gracefully'
       })
