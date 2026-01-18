@@ -1,11 +1,11 @@
-import { getSupabase } from '@config/supabase.js';
+import { getSupabase } from '../config/supabase.js';
 import type {
   NewsletterSignupRow,
   NewsletterSignupData,
   NewsletterSignupJSON,
   NewsletterFindAllOptions,
   NewsletterStats
-} from '@app-types/index.js';
+} from '../types/index.js';
 
 class NewsletterSignup {
   id: string | undefined;

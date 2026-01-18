@@ -1,7 +1,7 @@
 import express, { type Request, type Response } from 'express';
 import { body, validationResult, type ValidationChain, type Result, type ValidationError } from 'express-validator';
-import { ContactForm } from '@models/index.js';
-import { asyncHandler, validateInput } from '@middleware/index.js';
+import { ContactForm } from '../models/index.js';
+import { asyncHandler, validateInput } from '../middleware/index.js';
 import { logger } from '../logger.js';
 
 const router = express.Router();
