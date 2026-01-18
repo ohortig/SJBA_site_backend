@@ -1,6 +1,6 @@
 import express, { type Request, type Response, type NextFunction, type Application } from 'express';
 import cors from 'cors';
-import * as helmet from 'helmet';
+import helmet from 'helmet';
 import { rateLimit } from 'express-rate-limit';
 import compression from 'compression';
 import http from 'http';
@@ -37,7 +37,7 @@ testConnection().catch((error: Error) => {
 });
 
 // Security middleware
-app.use(helmet.default({
+app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: {
     directives: {
