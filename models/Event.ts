@@ -1,4 +1,4 @@
-import { getSupabase } from '@config/supabase.js';
+import { getSupabase } from '../config/supabase.js';
 import type {
   EventRow,
   EventImageRow,
@@ -12,7 +12,7 @@ import type {
   EventSearchOptions,
   EventData,
   EventJSON
-} from '@app-types/index.js';
+} from '../types/index.js';
 
 interface EventPaginatedResult {
   events: Event[];

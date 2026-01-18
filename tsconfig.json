@@ -23,24 +23,6 @@
           "allowSyntheticDefaultImports": true,
           "resolveJsonModule": true,
           "isolatedModules": true,
-          "baseUrl": ".",
-          "paths": {
-               "@config/*": [
-                    "./config/*"
-               ],
-               "@middleware/*": [
-                    "./middleware/*"
-               ],
-               "@models/*": [
-                    "./models/*"
-               ],
-               "@routes/*": [
-                    "./routes/*"
-               ],
-               "@app-types/*": [
-                    "./types/*"
-               ]
-          },
           "types": [
                "node"
           ]

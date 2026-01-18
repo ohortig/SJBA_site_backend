@@ -1,8 +1,8 @@
 import express, { type Request, type Response } from 'express';
 import { param, query, validationResult, type ValidationChain, type Result, type ValidationError } from 'express-validator';
-import { Event } from '@models/index.js';
-import { asyncHandler, validateInput } from '@middleware/index.js';
-import type { EventCategory, EventStatus } from '@app-types/index.js';
+import { Event } from '../models/index.js';
+import { asyncHandler, validateInput } from '../middleware/index.js';
+import type { EventCategory, EventStatus } from '../types/index.js';
 
 const router = express.Router();
 

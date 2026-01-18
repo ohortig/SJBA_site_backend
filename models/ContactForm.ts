@@ -1,6 +1,6 @@
-import { getSupabase } from '@config/supabase.js';
-import { sendEmail, isEmailEnabled } from '@config/email.js';
-import type { ContactSubmissionRow, ContactFormData, ContactFormJSON } from '@app-types/index.js';
+import { getSupabase } from '../config/supabase.js';
+import { sendEmail, isEmailEnabled } from '../config/email.js';
+import type { ContactSubmissionRow, ContactFormData, ContactFormJSON } from '../types/index.js';
 import { logger } from '../logger.js';
 
 class ContactForm {

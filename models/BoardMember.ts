@@ -1,5 +1,5 @@
-import { getSupabase } from '@config/supabase.js';
-import type { BoardMemberRow, BoardMemberData, BoardMemberJSON } from '@app-types/index.js';
+import { getSupabase } from '../config/supabase.js';
+import type { BoardMemberRow, BoardMemberData, BoardMemberJSON } from '../types/index.js';
 
 class BoardMember {
   id: string;

@@ -6,11 +6,11 @@ import http from 'http';
 
 import dotenv from 'dotenv';
 
-import { initializeSupabase, testConnection } from '@config/supabase.js';
-import { initializeEmailTransporter } from '@config/email.js';
-import { errorHandler, notFound, validateReferer } from '@middleware/index.js';
+import { initializeSupabase, testConnection } from './config/supabase.js';
+import { initializeEmailTransporter } from './config/email.js';
+import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 
-import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes } from '@routes/index.js';
+import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes } from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
 
