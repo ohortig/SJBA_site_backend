@@ -1,33 +1,5 @@
 import { getSupabase } from '@config/supabase.js';
-import type { BoardMemberRow } from '@app-types/index.js';
-
-interface BoardMemberData {
-  id: string;
-  full_name: string;
-  position: string;
-  bio: string;
-  major: string;
-  year: string;
-  hometown: string;
-  linkedin_url: string | null;
-  email: string;
-  headshot_file: string | null;
-  order_index: number;
-}
-
-interface BoardMemberJSON {
-  id: string;
-  full_name: string;
-  position: string;
-  bio: string;
-  major: string;
-  year: string;
-  hometown: string;
-  linkedin_url: string | null;
-  email: string;
-  headshot_file: string | null;
-  order_index: number;
-}
+import type { BoardMemberRow, BoardMemberData, BoardMemberJSON } from '@app-types/index.js';
 
 class BoardMember {
   id: string;

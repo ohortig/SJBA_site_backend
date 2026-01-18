@@ -8,9 +8,10 @@ import http from 'http';
 import dotenv from 'dotenv';
 
 import { initializeSupabase, testConnection } from '@config/supabase.js';
+import { initializeEmailTransporter } from '@config/email.js';
 import { errorHandler, notFound, validateReferer } from '@middleware/index.js';
 
-import { boardMembersRoutes, newsletterRoutes, eventsRoutes } from '@routes/index.js';
+import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes } from '@routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
 
@@ -25,6 +26,7 @@ if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
 }
 
 initializeSupabase();
+initializeEmailTransporter();
 
 testConnection().catch((error: Error) => {
   logger.error({
@@ -150,6 +152,7 @@ app.get('/favicon.png', (_req: Request, res: Response): void => {
 app.use('/api/v1/board-members', boardMembersRoutes);
 app.use('/api/v1/newsletter-sign-ups', newsletterRoutes);
 app.use('/api/v1/events', eventsRoutes);
+app.use('/api/v1/contact', contactRoutes);
 
 // API info endpoint
 app.get('/api/v1', (_req: Request, res: Response): void => {

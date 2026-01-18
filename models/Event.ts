@@ -9,44 +9,10 @@ import type {
   Organizer,
   EventRelatedData,
   EventFindAllOptions,
-  EventSearchOptions
+  EventSearchOptions,
+  EventData,
+  EventJSON
 } from '@app-types/index.js';
-
-interface EventData {
-  id?: string;
-  title?: string;
-  description?: string;
-  short_description?: string | null;
-  event_date?: string;
-  end_date?: string | null;
-  location?: string | null;
-  street?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zip_code?: string | null;
-  country?: string | null;
-  is_virtual?: boolean;
-  virtual_link?: string | null;
-  is_public?: boolean;
-  is_featured?: boolean;
-  capacity?: number | null;
-  registration_required?: boolean;
-  registration_link?: string | null;
-  registration_deadline?: string | null;
-  price?: string | number;
-  currency?: string;
-  organizer_name?: string | null;
-  organizer_email?: string | null;
-  organizer_phone?: string | null;
-  status?: EventStatus;
-  created_at?: string;
-  updated_at?: string;
-  categories?: string[];
-  tags?: string[];
-  images?: EventImageRow[];
-  attachments?: EventAttachmentRow[];
-  socialLinks?: Record<string, string>;
-}
 
 interface EventPaginatedResult {
   events: Event[];
@@ -54,41 +20,6 @@ interface EventPaginatedResult {
   page: number;
   limit: number;
   totalPages: number;
-}
-
-interface EventJSON {
-  id: string | undefined;
-  title: string | undefined;
-  description: string | undefined;
-  shortDescription: string | null | undefined;
-  date: string | undefined;
-  endDate: string | null | undefined;
-  location: string | null | undefined;
-  address: Address;
-  isVirtual: boolean | undefined;
-  virtualLink: string | null | undefined;
-  isPublic: boolean | undefined;
-  isFeatured: boolean | undefined;
-  capacity: number | null | undefined;
-  registrationRequired: boolean | undefined;
-  registrationLink: string | null | undefined;
-  registrationDeadline: string | null | undefined;
-  price: number;
-  currency: string | undefined;
-  organizer: Organizer;
-  status: EventStatus | undefined;
-  categories: string[];
-  tags: string[];
-  images: EventImageRow[];
-  attachments: EventAttachmentRow[];
-  socialLinks: Record<string, string>;
-  isUpcoming: boolean;
-  isPast: boolean;
-  durationHours: number | null;
-  primaryImage: EventImageRow | null;
-  isRegistrationOpen: boolean;
-  createdAt: string | undefined;
-  updatedAt: string | undefined;
 }
 
 class Event {

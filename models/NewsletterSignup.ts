@@ -1,38 +1,11 @@
 import { getSupabase } from '@config/supabase.js';
-import type { NewsletterSignupRow } from '@app-types/index.js';
-
-interface NewsletterSignupData {
-  id?: string;
-  email?: string;
-  first_name?: string;
-  last_name?: string;
-  year?: string;
-  college?: string;
-  created_at?: string;
-}
-
-interface NewsletterSignupJSON {
-  id: string | undefined;
-  email: string | undefined;
-  firstName: string | undefined;
-  lastName: string | undefined;
-  year: string | undefined;
-  college: string | undefined;
-  createdAt: string;
-}
-
-interface NewsletterFindAllOptions {
-  active?: boolean;
-  page?: number;
-  limit?: number;
-  orderBy?: string;
-  orderDirection?: 'asc' | 'desc';
-}
-
-interface NewsletterStats {
-  total: number | null;
-  recentSignups: number | null;
-}
+import type {
+  NewsletterSignupRow,
+  NewsletterSignupData,
+  NewsletterSignupJSON,
+  NewsletterFindAllOptions,
+  NewsletterStats
+} from '@app-types/index.js';
 
 class NewsletterSignup {
   id: string | undefined;

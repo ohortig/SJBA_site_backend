@@ -1,0 +1,209 @@
+import { getSupabase } from '@config/supabase.js';
+import { sendEmail, isEmailEnabled } from '@config/email.js';
+import type { ContactSubmissionRow, ContactFormData, ContactFormJSON } from '@app-types/index.js';
+import { logger } from '../logger.js';
+
+class ContactForm {
+     id: string | undefined;
+     firstName: string | undefined;
+     lastName: string | undefined;
+     email: string | undefined;
+     company: string | null | undefined;
+     message: string | undefined;
+     createdAt: string;
+
+     constructor(data: ContactFormData = {}) {
+          this.id = data.id;
+          this.firstName = data.first_name;
+          this.lastName = data.last_name;
+          this.email = data.email;
+          this.company = data.company;
+          this.message = data.message;
+          this.createdAt = data.created_at ?? new Date().toISOString();
+     }
+
+     // Convert database row to model instance
+     static fromDatabase(row: ContactSubmissionRow | null): ContactForm | null {
+          if (!row) return null;
+          return new ContactForm(row);
+     }
+
+     // Convert model instance to database format
+     toDatabase(): ContactFormData {
+          return {
+               first_name: this.firstName,
+               last_name: this.lastName,
+               email: this.email,
+               company: this.company,
+               message: this.message,
+               created_at: this.createdAt
+          };
+     }
+
+     toJSON(): ContactFormJSON {
+          return {
+               id: this.id,
+               firstName: this.firstName,
+               lastName: this.lastName,
+               email: this.email,
+               company: this.company,
+               message: this.message,
+               createdAt: this.createdAt
+          };
+     }
+
+     // Validation
+     validate(): string[] {
+          const errors: string[] = [];
+
+          if (!this.firstName || this.firstName.trim().length === 0) {
+               errors.push('First name is required');
+          }
+
+          if (!this.lastName || this.lastName.trim().length === 0) {
+               errors.push('Last name is required');
+          }
+
+          if (!this.email || this.email.trim().length === 0) {
+               errors.push('Email is required');
+          }
+
+          if (this.email) {
+               const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+               if (!emailRegex.test(this.email.toLowerCase())) {
+                    errors.push('Please enter a valid email');
+               }
+          }
+
+          if (!this.message || this.message.trim().length === 0) {
+               errors.push('Message is required');
+          }
+
+          if (this.firstName && this.firstName.length > 100) {
+               errors.push('First name cannot exceed 100 characters');
+          }
+
+          if (this.lastName && this.lastName.length > 100) {
+               errors.push('Last name cannot exceed 100 characters');
+          }
+
+          if (this.company && this.company.length > 255) {
+               errors.push('Company cannot exceed 255 characters');
+          }
+
+          if (this.message && this.message.length > 5000) {
+               errors.push('Message cannot exceed 5000 characters');
+          }
+
+          return errors;
+     }
+
+     static async create(formData: ContactFormData): Promise<ContactForm | null> {
+          const form = new ContactForm(formData);
+
+          // Normalize email
+          if (form.email) {
+               form.email = form.email.toLowerCase().trim();
+          }
+
+          // Validate
+          const errors = form.validate();
+          if (errors.length > 0) {
+               throw new Error(`Validation failed: ${errors.join(', ')}`);
+          }
+
+          const supabase = getSupabase();
+
+          const { data, error } = await supabase
+               .from('contact_requests')
+               .insert(form.toDatabase())
+               .select()
+               .single();
+
+          if (error) {
+               throw new Error(`Failed to create contact submission: ${error.message}`);
+          }
+
+          return ContactForm.fromDatabase(data as ContactSubmissionRow);
+     }
+
+     /**
+      * Send notification email about a contact form submission
+      */
+     async sendNotificationEmail(): Promise<boolean> {
+          if (!isEmailEnabled()) {
+               logger.warn({ message: 'Email not configured - skipping notification' });
+               return false;
+          }
+
+          const recipientEmail = process.env.CONTACT_NOTIFICATION_EMAIL || 'sjba@stern.nyu.edu';
+
+          const subject = `New Contact Form Submission from ${this.firstName} ${this.lastName}`;
+
+          const text = `
+New Contact Form Submission
+
+Name: ${this.firstName} ${this.lastName}
+Email: ${this.email}
+Company: ${this.company || 'Not provided'}
+
+Message:
+${this.message}
+
+---
+Submitted at: ${new Date(this.createdAt).toLocaleString()}
+    `.trim();
+
+          const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #2c3e50; color: white; padding: 20px; text-align: center; }
+    .content { padding: 20px; background: #f9f9f9; }
+    .field { margin-bottom: 15px; }
+    .label { font-weight: bold; color: #2c3e50; }
+    .message { background: white; padding: 15px; border-left: 4px solid #2c3e50; margin-top: 10px; }
+    .footer { text-align: center; padding: 10px; color: #666; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>New Contact Form Submission</h1>
+    </div>
+    <div class="content">
+      <div class="field">
+        <span class="label">Name:</span> ${this.firstName} ${this.lastName}
+      </div>
+      <div class="field">
+        <span class="label">Email:</span> <a href="mailto:${this.email}">${this.email}</a>
+      </div>
+      <div class="field">
+        <span class="label">Company:</span> ${this.company || 'Not provided'}
+      </div>
+      <div class="field">
+        <span class="label">Message:</span>
+        <div class="message">${this.message?.replace(/\n/g, '<br>')}</div>
+      </div>
+    </div>
+    <div class="footer">
+      Submitted at: ${new Date(this.createdAt).toLocaleString()}
+    </div>
+  </div>
+</body>
+</html>
+    `.trim();
+
+          return sendEmail({
+               to: recipientEmail,
+               subject,
+               text,
+               html
+          });
+     }
+}
+
+export default ContactForm;
