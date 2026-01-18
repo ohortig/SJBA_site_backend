@@ -1,19 +1,48 @@
-import { getSupabase } from '../config/supabase.js';
+import { getSupabase } from '@config/supabase.js';
+import type { BoardMemberRow } from '@app-types/index.js';
+
+interface BoardMemberData {
+  id: string;
+  full_name: string;
+  position: string;
+  bio: string;
+  major: string;
+  year: string;
+  hometown: string;
+  linkedin_url: string | null;
+  email: string;
+  headshot_file: string | null;
+  order_index: number;
+}
+
+interface BoardMemberJSON {
+  id: string;
+  full_name: string;
+  position: string;
+  bio: string;
+  major: string;
+  year: string;
+  hometown: string;
+  linkedin_url: string | null;
+  email: string;
+  headshot_file: string | null;
+  order_index: number;
+}
 
 class BoardMember {
-  /*
-    id uuid not null default gen_random_uuid (),
-    position character varying(255) not null,
-    full_name character varying(255) not null,
-    bio text not null,
-    major character varying(255) not null,
-    year character varying(255) not null,
-    hometown character varying(255) not null,
-    linkedin_url character varying(255) null,
-    email character varying(255) not null,
-    headshot_file character varying(255) null,
-  */
-  constructor(data = {}) {
+  id: string;
+  fullName: string;
+  position: string;
+  bio: string;
+  major: string;
+  year: string;
+  hometown: string;
+  linkedinUrl: string | null;
+  email: string;
+  headshotFile: string | null;
+  orderIndex: number;
+
+  constructor(data: BoardMemberData) {
     this.id = data.id;
     this.fullName = data.full_name;
     this.position = data.position;
@@ -27,12 +56,12 @@ class BoardMember {
     this.orderIndex = data.order_index;
   }
 
-  static fromDatabase(row) {
+  static fromDatabase(row: BoardMemberRow | null): BoardMember | null {
     if (!row) return null;
     return new BoardMember(row);
   }
 
-  toDatabase() {
+  toDatabase(): BoardMemberData {
     return {
       id: this.id,
       full_name: this.fullName,
@@ -48,7 +77,7 @@ class BoardMember {
     };
   }
 
-  toJSON() {
+  toJSON(): BoardMemberJSON {
     return {
       id: this.id,
       full_name: this.fullName,
@@ -64,8 +93,8 @@ class BoardMember {
     };
   }
 
-  validate() {
-    const errors = [];
+  validate(): string[] {
+    const errors: string[] = [];
 
     if (!this.fullName || this.fullName.trim().length === 0) {
       errors.push('Name is required');
@@ -96,15 +125,14 @@ class BoardMember {
     return errors;
   }
 
-  static async findAll(options = {}) {
+  static async findAll(): Promise<BoardMember[]> {
     const supabase = getSupabase();
-    
-    let query = supabase
-      .from('board_members')
-      .select('*');
 
-    query = query.order('order_index', { ascending: true })
-                 .order('full_name', { ascending: true });
+    const query = supabase
+      .from('board_members')
+      .select('*')
+      .order('order_index', { ascending: true })
+      .order('full_name', { ascending: true });
 
     const { data, error } = await query;
 
@@ -112,10 +140,10 @@ class BoardMember {
       throw new Error(`Failed to fetch board members: ${error.message}`);
     }
 
-    return data.map(row => BoardMember.fromDatabase(row));
+    return (data as BoardMemberRow[]).map(row => BoardMember.fromDatabase(row)!);
   }
 
-  static async findById(id) {
+  static async findById(id: string): Promise<BoardMember | null> {
     const supabase = getSupabase();
 
     const { data, error } = await supabase
@@ -128,13 +156,13 @@ class BoardMember {
       throw new Error(`Failed to fetch board member: ${error.message}`);
     }
 
-    return BoardMember.fromDatabase(data);
+    return BoardMember.fromDatabase(data as BoardMemberRow);
   }
 
-  static async create(memberData) {
+  static async create(memberData: BoardMemberData): Promise<BoardMember | null> {
     const member = new BoardMember(memberData);
     const errors = member.validate();
-    
+
     if (errors.length > 0) {
       throw new Error(`Validation failed: ${errors.join(', ')}`);
     }
@@ -151,10 +179,10 @@ class BoardMember {
       throw new Error(`Failed to create board member: ${error.message}`);
     }
 
-    return BoardMember.fromDatabase(data);
+    return BoardMember.fromDatabase(data as BoardMemberRow);
   }
 
-  async save() {
+  async save(): Promise<BoardMember> {
     // Validate
     const errors = this.validate();
     if (errors.length > 0) {
@@ -177,7 +205,10 @@ class BoardMember {
       }
 
       // Update instance with returned data
-      Object.assign(this, BoardMember.fromDatabase(data));
+      const updated = BoardMember.fromDatabase(data as BoardMemberRow);
+      if (updated) {
+        Object.assign(this, updated);
+      }
     } else {
       // Create new
       const { data, error } = await supabase
@@ -191,13 +222,16 @@ class BoardMember {
       }
 
       // Update instance with returned data
-      Object.assign(this, BoardMember.fromDatabase(data));
+      const created = BoardMember.fromDatabase(data as BoardMemberRow);
+      if (created) {
+        Object.assign(this, created);
+      }
     }
 
     return this;
   }
 
-  async delete() {
+  async delete(): Promise<boolean> {
     if (!this.id) {
       throw new Error('Cannot delete board member without ID');
     }
@@ -216,20 +250,18 @@ class BoardMember {
     return true;
   }
 
-  static async count(options = {}) {
+  static async count(): Promise<number> {
     const supabase = getSupabase();
 
-    let query = supabase
+    const { count, error } = await supabase
       .from('board_members')
       .select('*', { count: 'exact', head: true });
-
-    const { count, error } = await query;
 
     if (error) {
       throw new Error(`Failed to count board members: ${error.message}`);
     }
 
-    return count;
+    return count ?? 0;
   }
 }
 

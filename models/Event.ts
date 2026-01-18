@@ -1,7 +1,126 @@
-import { getSupabase } from '../config/supabase.js';
+import { getSupabase } from '@config/supabase.js';
+import type {
+  EventRow,
+  EventImageRow,
+  EventAttachmentRow,
+  EventSocialLinkRow,
+  EventStatus,
+  Address,
+  Organizer,
+  EventRelatedData,
+  EventFindAllOptions,
+  EventSearchOptions
+} from '@app-types/index.js';
+
+interface EventData {
+  id?: string;
+  title?: string;
+  description?: string;
+  short_description?: string | null;
+  event_date?: string;
+  end_date?: string | null;
+  location?: string | null;
+  street?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip_code?: string | null;
+  country?: string | null;
+  is_virtual?: boolean;
+  virtual_link?: string | null;
+  is_public?: boolean;
+  is_featured?: boolean;
+  capacity?: number | null;
+  registration_required?: boolean;
+  registration_link?: string | null;
+  registration_deadline?: string | null;
+  price?: string | number;
+  currency?: string;
+  organizer_name?: string | null;
+  organizer_email?: string | null;
+  organizer_phone?: string | null;
+  status?: EventStatus;
+  created_at?: string;
+  updated_at?: string;
+  categories?: string[];
+  tags?: string[];
+  images?: EventImageRow[];
+  attachments?: EventAttachmentRow[];
+  socialLinks?: Record<string, string>;
+}
+
+interface EventPaginatedResult {
+  events: Event[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+interface EventJSON {
+  id: string | undefined;
+  title: string | undefined;
+  description: string | undefined;
+  shortDescription: string | null | undefined;
+  date: string | undefined;
+  endDate: string | null | undefined;
+  location: string | null | undefined;
+  address: Address;
+  isVirtual: boolean | undefined;
+  virtualLink: string | null | undefined;
+  isPublic: boolean | undefined;
+  isFeatured: boolean | undefined;
+  capacity: number | null | undefined;
+  registrationRequired: boolean | undefined;
+  registrationLink: string | null | undefined;
+  registrationDeadline: string | null | undefined;
+  price: number;
+  currency: string | undefined;
+  organizer: Organizer;
+  status: EventStatus | undefined;
+  categories: string[];
+  tags: string[];
+  images: EventImageRow[];
+  attachments: EventAttachmentRow[];
+  socialLinks: Record<string, string>;
+  isUpcoming: boolean;
+  isPast: boolean;
+  durationHours: number | null;
+  primaryImage: EventImageRow | null;
+  isRegistrationOpen: boolean;
+  createdAt: string | undefined;
+  updatedAt: string | undefined;
+}
 
 class Event {
-  constructor(data = {}) {
+  id: string | undefined;
+  title: string | undefined;
+  description: string | undefined;
+  shortDescription: string | null | undefined;
+  date: string | undefined;
+  endDate: string | null | undefined;
+  location: string | null | undefined;
+  address: Address;
+  isVirtual: boolean | undefined;
+  virtualLink: string | null | undefined;
+  isPublic: boolean | undefined;
+  isFeatured: boolean | undefined;
+  capacity: number | null | undefined;
+  registrationRequired: boolean | undefined;
+  registrationLink: string | null | undefined;
+  registrationDeadline: string | null | undefined;
+  price: number;
+  currency: string | undefined;
+  organizer: Organizer;
+  status: EventStatus | undefined;
+  createdAt: string | undefined;
+  updatedAt: string | undefined;
+  categories: string[];
+  tags: string[];
+  images: EventImageRow[];
+  attachments: EventAttachmentRow[];
+  socialLinks: Record<string, string>;
+
+  constructor(data: EventData = {}) {
     this.id = data.id;
     this.title = data.title;
     this.description = data.description;
@@ -10,11 +129,11 @@ class Event {
     this.endDate = data.end_date;
     this.location = data.location;
     this.address = {
-      street: data.street,
-      city: data.city,
-      state: data.state,
-      zipCode: data.zip_code,
-      country: data.country
+      street: data.street ?? null,
+      city: data.city ?? null,
+      state: data.state ?? null,
+      zipCode: data.zip_code ?? null,
+      country: data.country ?? null
     };
     this.isVirtual = data.is_virtual;
     this.virtualLink = data.virtual_link;
@@ -24,17 +143,17 @@ class Event {
     this.registrationRequired = data.registration_required;
     this.registrationLink = data.registration_link;
     this.registrationDeadline = data.registration_deadline;
-    this.price = parseFloat(data.price) || 0;
+    this.price = typeof data.price === 'string' ? parseFloat(data.price) || 0 : (data.price ?? 0);
     this.currency = data.currency;
     this.organizer = {
-      name: data.organizer_name,
-      email: data.organizer_email,
-      phone: data.organizer_phone
+      name: data.organizer_name ?? null,
+      email: data.organizer_email ?? null,
+      phone: data.organizer_phone ?? null
     };
     this.status = data.status;
     this.createdAt = data.created_at;
     this.updatedAt = data.updated_at;
-    
+
     // Related data (loaded separately)
     this.categories = data.categories || [];
     this.tags = data.tags || [];
@@ -44,23 +163,23 @@ class Event {
   }
 
   // Convert database row to model instance
-  static fromDatabase(row, relatedData = {}) {
+  static fromDatabase(row: EventRow | null, relatedData: EventRelatedData = {}): Event | null {
     if (!row) return null;
-    
-    const event = new Event(row);
-    
-    // Add related data if provided
-    if (relatedData.categories) event.categories = relatedData.categories;
-    if (relatedData.tags) event.tags = relatedData.tags;
-    if (relatedData.images) event.images = relatedData.images;
-    if (relatedData.attachments) event.attachments = relatedData.attachments;
-    if (relatedData.socialLinks) event.socialLinks = relatedData.socialLinks;
-    
-    return event;
+
+    const eventData: EventData = {
+      ...row,
+      categories: relatedData.categories,
+      tags: relatedData.tags,
+      images: relatedData.images,
+      attachments: relatedData.attachments,
+      socialLinks: relatedData.socialLinks
+    };
+
+    return new Event(eventData);
   }
 
   // Convert model instance to database format
-  toDatabase() {
+  toDatabase(): Partial<EventRow> {
     return {
       title: this.title,
       description: this.description,
@@ -91,7 +210,7 @@ class Event {
   }
 
   // Convert to JSON for API response
-  toJSON() {
+  toJSON(): EventJSON {
     return {
       id: this.id,
       title: this.title,
@@ -129,34 +248,36 @@ class Event {
   }
 
   // Virtual properties
-  isUpcoming() {
+  isUpcoming(): boolean {
+    if (!this.date) return false;
     return new Date(this.date) > new Date();
   }
 
-  isPast() {
-    const endDate = this.endDate ? new Date(this.endDate) : new Date(this.date);
+  isPast(): boolean {
+    const endDate = this.endDate ? new Date(this.endDate) : (this.date ? new Date(this.date) : null);
+    if (!endDate) return false;
     return endDate < new Date();
   }
 
-  getDurationHours() {
-    if (!this.endDate) return null;
-    return Math.round((new Date(this.endDate) - new Date(this.date)) / (1000 * 60 * 60));
+  getDurationHours(): number | null {
+    if (!this.endDate || !this.date) return null;
+    return Math.round((new Date(this.endDate).getTime() - new Date(this.date).getTime()) / (1000 * 60 * 60));
   }
 
-  getPrimaryImage() {
+  getPrimaryImage(): EventImageRow | null {
     const primary = this.images.find(img => img.is_primary);
     return primary || (this.images.length > 0 ? this.images[0] : null);
   }
 
-  isRegistrationOpen() {
+  isRegistrationOpen(): boolean {
     if (!this.registrationRequired) return false;
     if (!this.registrationDeadline) return this.isUpcoming();
     return new Date(this.registrationDeadline) > new Date() && this.isUpcoming();
   }
 
   // Validation
-  validate() {
-    const errors = [];
+  validate(): string[] {
+    const errors: string[] = [];
 
     if (!this.title || this.title.trim().length === 0) {
       errors.push('Title is required');
@@ -204,7 +325,7 @@ class Event {
   }
 
   // Static methods for database operations
-  static async findAll(options = {}) {
+  static async findAll(options: EventFindAllOptions = {}): Promise<EventPaginatedResult> {
     const supabase = getSupabase();
     const {
       page = 1,
@@ -250,20 +371,20 @@ class Event {
         throw new Error(`Failed to filter by category: ${categoryError.message}`);
       }
 
-      const ids = eventIds.map(row => row.event_id);
+      const ids = (eventIds as { event_id: string }[]).map(row => row.event_id);
       if (ids.length === 0) {
-        return { events: [], total: 0 }; // No events in this category
+        return { events: [], total: 0, page, limit, totalPages: 0 };
       }
       query = query.in('id', ids);
     }
 
     // Get total count
-    const countQuery = supabase
+    let totalQuery = supabase
       .from('events')
-      .select('*', { count: 'exact', head: true });
-    
-    // Apply same filters to count query
-    let totalQuery = countQuery.eq('is_public', isPublic).eq('status', status);
+      .select('*', { count: 'exact', head: true })
+      .eq('is_public', isPublic)
+      .eq('status', status);
+
     if (isFeatured !== undefined) totalQuery = totalQuery.eq('is_featured', isFeatured);
     if (upcoming) totalQuery = totalQuery.gte('event_date', now);
     if (past) totalQuery = totalQuery.lt('event_date', now);
@@ -272,20 +393,23 @@ class Event {
         .from('event_categories')
         .select('event_id')
         .eq('category', category);
-      const ids = eventIds.map(row => row.event_id);
+      const ids = (eventIds as { event_id: string }[] | null)?.map(row => row.event_id) ?? [];
       if (ids.length > 0) totalQuery = totalQuery.in('id', ids);
     }
 
-    const [{ count: total, error: countError }, { data: events, error: eventsError }] = await Promise.all([
+    const [countResult, eventsResult] = await Promise.all([
       totalQuery,
       query
         .order(orderBy, { ascending: orderDirection === 'asc' })
         .range((page - 1) * limit, page * limit - 1)
     ]);
 
-    if (countError || eventsError) {
-      throw new Error(`Failed to fetch events: ${countError?.message || eventsError?.message}`);
+    if (countResult.error || eventsResult.error) {
+      throw new Error(`Failed to fetch events: ${countResult.error?.message || eventsResult.error?.message}`);
     }
+
+    const total = countResult.count ?? 0;
+    const events = eventsResult.data as EventRow[];
 
     // Load related data for each event
     const eventsWithRelated = await Promise.all(
@@ -293,7 +417,7 @@ class Event {
     );
 
     return {
-      events: eventsWithRelated.map(event => Event.fromDatabase(event.event, event.related)),
+      events: eventsWithRelated.map(({ event, related }) => Event.fromDatabase(event, related)!),
       total,
       page,
       limit,
@@ -301,7 +425,7 @@ class Event {
     };
   }
 
-  static async findById(id) {
+  static async findById(id: string): Promise<Event | null> {
     const supabase = getSupabase();
 
     const { data, error } = await supabase
@@ -318,11 +442,11 @@ class Event {
     }
 
     // Load related data
-    const { related } = await Event.loadRelatedData(data);
-    return Event.fromDatabase(data, related);
+    const { related } = await Event.loadRelatedData(data as EventRow);
+    return Event.fromDatabase(data as EventRow, related);
   }
 
-  static async findUpcoming(limit = 10) {
+  static async findUpcoming(limit: number = 10): Promise<Event[]> {
     const supabase = getSupabase();
     const now = new Date().toISOString();
 
@@ -341,13 +465,13 @@ class Event {
 
     // Load related data for each event
     const eventsWithRelated = await Promise.all(
-      data.map(event => Event.loadRelatedData(event))
+      (data as EventRow[]).map(event => Event.loadRelatedData(event))
     );
 
-    return eventsWithRelated.map(event => Event.fromDatabase(event.event, event.related));
+    return eventsWithRelated.map(({ event, related }) => Event.fromDatabase(event, related)!);
   }
 
-  static async search(searchQuery, options = {}) {
+  static async search(searchQuery: string, options: EventSearchOptions = {}): Promise<EventPaginatedResult> {
     const supabase = getSupabase();
     const {
       page = 1,
@@ -376,15 +500,15 @@ class Event {
         throw new Error(`Failed to filter by categories: ${categoryError.message}`);
       }
 
-      const ids = eventIds.map(row => row.event_id);
+      const ids = (eventIds as { event_id: string }[]).map(row => row.event_id);
       if (ids.length === 0) {
-        return { events: [], total: 0 };
+        return { events: [], total: 0, page, limit, totalPages: 0 };
       }
       query = query.in('id', ids);
     }
 
     // Get total count and events
-    const countQuery = supabase
+    let countQuery = supabase
       .from('events')
       .select('*', { count: 'exact', head: true })
       .textSearch('title', searchQuery)
@@ -396,20 +520,23 @@ class Event {
         .from('event_categories')
         .select('event_id')
         .in('category', categories);
-      const ids = eventIds.map(row => row.event_id);
-      if (ids.length > 0) countQuery.in('id', ids);
+      const ids = (eventIds as { event_id: string }[] | null)?.map(row => row.event_id) ?? [];
+      if (ids.length > 0) countQuery = countQuery.in('id', ids);
     }
 
-    const [{ count: total, error: countError }, { data: events, error: eventsError }] = await Promise.all([
+    const [countResult, eventsResult] = await Promise.all([
       countQuery,
       query
         .order('event_date', { ascending: false })
         .range((page - 1) * limit, page * limit - 1)
     ]);
 
-    if (countError || eventsError) {
-      throw new Error(`Failed to search events: ${countError?.message || eventsError?.message}`);
+    if (countResult.error || eventsResult.error) {
+      throw new Error(`Failed to search events: ${countResult.error?.message || eventsResult.error?.message}`);
     }
+
+    const total = countResult.count ?? 0;
+    const events = eventsResult.data as EventRow[];
 
     // Load related data for each event
     const eventsWithRelated = await Promise.all(
@@ -417,7 +544,7 @@ class Event {
     );
 
     return {
-      events: eventsWithRelated.map(event => Event.fromDatabase(event.event, event.related)),
+      events: eventsWithRelated.map(({ event, related }) => Event.fromDatabase(event, related)!),
       total,
       page,
       limit,
@@ -426,16 +553,16 @@ class Event {
   }
 
   // Helper method to load related data
-  static async loadRelatedData(eventData) {
+  static async loadRelatedData(eventData: EventRow): Promise<{ event: EventRow; related: EventRelatedData }> {
     const supabase = getSupabase();
     const eventId = eventData.id;
 
     const [
-      { data: categories, error: catError },
-      { data: tags, error: tagError },
-      { data: images, error: imgError },
-      { data: attachments, error: attError },
-      { data: socialLinks, error: socialError }
+      categoriesResult,
+      tagsResult,
+      imagesResult,
+      attachmentsResult,
+      socialLinksResult
     ] = await Promise.all([
       supabase.from('event_categories').select('category').eq('event_id', eventId),
       supabase.from('event_tags').select('tag').eq('event_id', eventId),
@@ -444,16 +571,22 @@ class Event {
       supabase.from('event_social_links').select('*').eq('event_id', eventId)
     ]);
 
-    if (catError || tagError || imgError || attError || socialError) {
+    if (categoriesResult.error || tagsResult.error || imagesResult.error || attachmentsResult.error || socialLinksResult.error) {
       console.warn('Failed to load some related data for event:', eventId);
     }
 
-    const related = {
+    const categories = categoriesResult.data as { category: string }[] | null;
+    const tags = tagsResult.data as { tag: string }[] | null;
+    const images = imagesResult.data as EventImageRow[] | null;
+    const attachments = attachmentsResult.data as EventAttachmentRow[] | null;
+    const socialLinks = socialLinksResult.data as EventSocialLinkRow[] | null;
+
+    const related: EventRelatedData = {
       categories: categories?.map(c => c.category) || [],
       tags: tags?.map(t => t.tag) || [],
       images: images || [],
       attachments: attachments || [],
-      socialLinks: socialLinks?.reduce((acc, link) => {
+      socialLinks: socialLinks?.reduce<Record<string, string>>((acc, link) => {
         acc[link.platform] = link.url;
         return acc;
       }, {}) || {}
@@ -462,9 +595,9 @@ class Event {
     return { event: eventData, related };
   }
 
-  static async create(eventData) {
+  static async create(eventData: EventData): Promise<Event | null> {
     const event = new Event(eventData);
-    
+
     // Validate
     const errors = event.validate();
     if (errors.length > 0) {
@@ -483,15 +616,17 @@ class Event {
       throw new Error(`Failed to create event: ${error.message}`);
     }
 
-    const newEvent = Event.fromDatabase(data);
-    
+    const newEvent = Event.fromDatabase(data as EventRow);
+
     // Save related data
-    await newEvent.saveRelatedData();
+    if (newEvent) {
+      await newEvent.saveRelatedData();
+    }
 
     return newEvent;
   }
 
-  async save() {
+  async save(): Promise<Event> {
     // Validate
     const errors = this.validate();
     if (errors.length > 0) {
@@ -513,7 +648,10 @@ class Event {
         throw new Error(`Failed to update event: ${error.message}`);
       }
 
-      Object.assign(this, Event.fromDatabase(data));
+      const updated = Event.fromDatabase(data as EventRow);
+      if (updated) {
+        Object.assign(this, updated);
+      }
     } else {
       // Create new
       const { data, error } = await supabase
@@ -526,7 +664,10 @@ class Event {
         throw new Error(`Failed to create event: ${error.message}`);
       }
 
-      Object.assign(this, Event.fromDatabase(data));
+      const created = Event.fromDatabase(data as EventRow);
+      if (created) {
+        Object.assign(this, created);
+      }
     }
 
     // Save related data
@@ -535,7 +676,7 @@ class Event {
     return this;
   }
 
-  async saveRelatedData() {
+  async saveRelatedData(): Promise<void> {
     const supabase = getSupabase();
 
     if (!this.id) return;
@@ -550,53 +691,45 @@ class Event {
     ]);
 
     // Insert new related data
-    const promises = [];
-
     if (this.categories.length > 0) {
-      promises.push(
-        supabase.from('event_categories').insert(
-          this.categories.map(category => ({ event_id: this.id, category }))
-        )
+      await supabase.from('event_categories').insert(
+        this.categories.map(category => ({ event_id: this.id, category }))
       );
     }
 
     if (this.tags.length > 0) {
-      promises.push(
-        supabase.from('event_tags').insert(
-          this.tags.map(tag => ({ event_id: this.id, tag }))
-        )
+      await supabase.from('event_tags').insert(
+        this.tags.map(tag => ({ event_id: this.id, tag }))
       );
     }
 
     if (this.images.length > 0) {
-      promises.push(
-        supabase.from('event_images').insert(
-          this.images.map(image => ({ event_id: this.id, ...image }))
-        )
+      await supabase.from('event_images').insert(
+        this.images.map(({ id: _id, event_id: _eventId, ...rest }) => ({
+          event_id: this.id,
+          ...rest
+        }))
       );
     }
 
     if (this.attachments.length > 0) {
-      promises.push(
-        supabase.from('event_attachments').insert(
-          this.attachments.map(attachment => ({ event_id: this.id, ...attachment }))
-        )
+      await supabase.from('event_attachments').insert(
+        this.attachments.map(({ id: _id, event_id: _eventId, ...rest }) => ({
+          event_id: this.id,
+          ...rest
+        }))
       );
     }
 
     if (Object.keys(this.socialLinks).length > 0) {
-      promises.push(
-        supabase.from('event_social_links').insert(
-          Object.entries(this.socialLinks).map(([platform, url]) => ({
-            event_id: this.id,
-            platform,
-            url
-          }))
-        )
+      await supabase.from('event_social_links').insert(
+        Object.entries(this.socialLinks).map(([platform, url]) => ({
+          event_id: this.id,
+          platform,
+          url
+        }))
       );
     }
-
-    await Promise.all(promises);
   }
 }
 

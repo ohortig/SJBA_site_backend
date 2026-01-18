@@ -1,23 +1,32 @@
-const validateReferer = (req, res, next) => {
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
+
+const validateReferer: RequestHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   // Skip referer validation for development
   if (process.env.NODE_ENV === 'development') {
-    return next();
+    next();
+    return;
   }
 
   const referer = req.get('Referer') || req.get('Origin');
 
   // Allow requests with no referer (like curl, direct API calls, etc.)
   if (!referer) {
-    return next();
+    next();
+    return;
   }
 
   const allowedDomains = [
     process.env.FRONTEND_URL,
-  ].filter(Boolean);
+  ].filter(Boolean) as string[];
 
   // If no allowed domains are configured, allow all requests
   if (allowedDomains.length === 0) {
-    return next();
+    next();
+    return;
   }
 
   const isAllowed = allowedDomains.some(domain => {
@@ -25,37 +34,47 @@ const validateReferer = (req, res, next) => {
   });
 
   if (!isAllowed) {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       error: {
         message: 'Forbidden - Invalid referer',
         code: 'INVALID_REFERER'
       }
     });
+    return;
   }
 
   next();
 };
 
-const validateInput = (req, res, next) => {
-  const sanitizeString = (str) => {
-    if (typeof str !== 'string') return str;
+type SanitizedValue = string | number | boolean | null | undefined | SanitizedObject | SanitizedValue[];
+
+interface SanitizedObject {
+  [key: string]: SanitizedValue;
+}
+
+const validateInput: RequestHandler = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
+  const sanitizeString = (str: string): string => {
     return str.trim().replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   };
 
-  const sanitizeObject = (obj) => {
+  const sanitizeObject = (obj: unknown): SanitizedValue => {
     if (Array.isArray(obj)) {
       return obj.map(sanitizeObject);
     } else if (obj !== null && typeof obj === 'object') {
-      const sanitized = {};
-      for (const [key, value] of Object.entries(obj)) {
+      const sanitized: SanitizedObject = {};
+      for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
         sanitized[key] = sanitizeObject(value);
       }
       return sanitized;
     } else if (typeof obj === 'string') {
       return sanitizeString(obj);
     }
-    return obj;
+    return obj as SanitizedValue;
   };
 
   if (req.body) {
@@ -63,7 +82,7 @@ const validateInput = (req, res, next) => {
   }
 
   if (req.query) {
-    req.query = sanitizeObject(req.query);
+    req.query = sanitizeObject(req.query) as typeof req.query;
   }
 
   next();

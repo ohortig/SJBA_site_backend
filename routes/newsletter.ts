@@ -1,7 +1,7 @@
-import express from 'express';
-import { body, validationResult } from 'express-validator';
-import { NewsletterSignup } from '../models/index.js';
-import { asyncHandler, validateInput } from '../middleware/index.js';
+import express, { type Request, type Response } from 'express';
+import { body, validationResult, type ValidationChain, type Result, type ValidationError } from 'express-validator';
+import { NewsletterSignup } from '@models/index.js';
+import { asyncHandler, validateInput } from '@middleware/index.js';
 
 const router = express.Router();
 
@@ -9,10 +9,14 @@ const router = express.Router();
 router.use(validateInput);
 
 // Validation middleware
-const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
+const handleValidationErrors = (
+  req: Request,
+  res: Response,
+  next: express.NextFunction
+): void => {
+  const errors: Result<ValidationError> = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: {
         message: 'Validation failed',
@@ -20,6 +24,7 @@ const handleValidationErrors = (req, res, next) => {
         details: errors.array()
       }
     });
+    return;
   }
   next();
 };
@@ -59,37 +64,44 @@ router.post('/', [
     .trim()
     .isLength({ max: 50 })
     .withMessage('College must be less than 50 characters'),
-], handleValidationErrors, asyncHandler(async (req, res) => {
-  const { email, first_name, last_name, year, college } = req.body;
+] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request, res: Response) => {
+  const { email, first_name, last_name, year, college } = req.body as {
+    email: string;
+    first_name: string;
+    last_name: string;
+    year: string;
+    college: string;
+  };
 
   // Check if email already exists
   const existingSignup = await NewsletterSignup.findByEmail(email);
-  
+
   if (existingSignup) {
-    return res.status(409).json({
+    res.status(409).json({
       success: false,
       error: {
         message: 'Email is already subscribed to the newsletter',
         code: 'EMAIL_ALREADY_SUBSCRIBED'
       }
     });
-  } else {
-    const signupData = {
-      email,
-      first_name,
-      last_name,
-      year,
-      college
-    };
-
-    const newsletterSignup = await NewsletterSignup.create(signupData);
-
-    res.status(201).json({
-      success: true,
-      message: 'Successfully signed up for newsletter',
-      data: newsletterSignup.toJSON()
-    });
+    return;
   }
+
+  const signupData = {
+    email,
+    first_name,
+    last_name,
+    year,
+    college
+  };
+
+  const newsletterSignup = await NewsletterSignup.create(signupData);
+
+  res.status(201).json({
+    success: true,
+    message: 'Successfully signed up for newsletter',
+    data: newsletterSignup?.toJSON()
+  });
 }));
 
 export default router;

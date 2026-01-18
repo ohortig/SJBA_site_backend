@@ -1,18 +1,44 @@
-import express from 'express';
-import { param, query, validationResult } from 'express-validator';
-import { Event } from '../models/index.js';
-import { asyncHandler, validateInput } from '../middleware/index.js';
+import express, { type Request, type Response } from 'express';
+import { param, query, validationResult, type ValidationChain, type Result, type ValidationError } from 'express-validator';
+import { Event } from '@models/index.js';
+import { asyncHandler, validateInput } from '@middleware/index.js';
+import type { EventCategory, EventStatus } from '@app-types/index.js';
 
 const router = express.Router();
 
 // Apply input validation middleware
 router.use(validateInput);
 
+// Query parameter types
+interface EventsQuery {
+  page?: string;
+  limit?: string;
+  isPublic?: string;
+  isFeatured?: string;
+  status?: EventStatus;
+  category?: EventCategory;
+  upcoming?: string;
+  past?: string;
+}
+
+interface SearchQuery {
+  q?: string;
+  page?: string;
+  limit?: string;
+  category?: EventCategory;
+}
+
+
+
 // Validation middleware
-const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
+const handleValidationErrors = (
+  req: Request,
+  res: Response,
+  next: express.NextFunction
+): void => {
+  const errors: Result<ValidationError> = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: {
         message: 'Validation failed',
@@ -20,6 +46,7 @@ const handleValidationErrors = (req, res, next) => {
         details: errors.array()
       }
     });
+    return;
   }
   next();
 };
@@ -34,10 +61,10 @@ router.get('/', [
   query('isFeatured').optional().isBoolean().withMessage('isFeatured must be a boolean'),
   query('status').optional().isIn(['draft', 'published', 'cancelled', 'completed']).withMessage('Invalid status'),
   query('category').optional().isIn(['workshop', 'conference', 'networking', 'seminar', 'hackathon', 'meetup', 'webinar', 'other']).withMessage('Invalid category')
-], handleValidationErrors, asyncHandler(async (req, res) => {
+] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request<object, object, object, EventsQuery>, res: Response) => {
   const {
-    page = 1,
-    limit = 10,
+    page = '1',
+    limit = '10',
     isPublic = 'true',
     isFeatured,
     status = 'published',
@@ -46,40 +73,18 @@ router.get('/', [
     past
   } = req.query;
 
-  // Build query
-  const query = {
-    isPublic: isPublic === 'true',
-    status
-  };
-
-  if (isFeatured !== undefined) {
-    query.isFeatured = isFeatured === 'true';
-  }
-
-  if (category) {
-    query.categories = category;
-  }
-
-  // Date filtering
-  const now = new Date();
-  if (upcoming === 'true') {
-    query.date = { $gte: now };
-  } else if (past === 'true') {
-    query.date = { $lt: now };
-  }
-
   // Execute query with pagination
   const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
     isPublic: isPublic === 'true',
     isFeatured: isFeatured !== undefined ? isFeatured === 'true' : undefined,
-    status,
-    category,
+    status: status as EventStatus,
+    category: category as EventCategory | undefined,
     upcoming: upcoming === 'true',
     past: past === 'true',
     orderBy: upcoming === 'true' ? 'event_date' : 'event_date',
-    orderDirection: upcoming === 'true' ? 'asc' : 'desc'
+    orderDirection: (upcoming === 'true' ? 'asc' : 'desc') as 'asc' | 'desc'
   };
 
   const result = await Event.findAll(options);
@@ -104,8 +109,8 @@ router.get('/', [
 // @access  Public
 router.get('/upcoming', [
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50')
-], handleValidationErrors, asyncHandler(async (req, res) => {
-  const limit = parseInt(req.query.limit) || 5;
+] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request, res: Response) => {
+  const limit = parseInt(req.query.limit as string, 10) || 5;
 
   const events = await Event.findUpcoming(limit);
 
@@ -124,21 +129,21 @@ router.get('/search', [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
   query('category').optional().isIn(['workshop', 'conference', 'networking', 'seminar', 'hackathon', 'meetup', 'webinar', 'other']).withMessage('Invalid category')
-], handleValidationErrors, asyncHandler(async (req, res) => {
+] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request<object, object, object, SearchQuery>, res: Response) => {
   const {
     q: searchQuery,
-    page = 1,
-    limit = 10,
+    page = '1',
+    limit = '10',
     category
   } = req.query;
 
   const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
     categories: category ? [category] : undefined
   };
 
-  const result = await Event.search(searchQuery, options);
+  const result = await Event.search(searchQuery as string, options);
 
   res.status(200).json({
     success: true,
@@ -160,28 +165,30 @@ router.get('/search', [
 // @access  Public
 router.get('/:id', [
   param('id').isUUID().withMessage('Invalid event ID')
-], handleValidationErrors, asyncHandler(async (req, res) => {
-  const event = await Event.findById(req.params.id);
+] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request, res: Response) => {
+  const event = await Event.findById(req.params.id as string);
 
   if (!event) {
-    return res.status(404).json({
+    res.status(404).json({
       success: false,
       error: {
         message: 'Event not found',
         code: 'EVENT_NOT_FOUND'
       }
     });
+    return;
   }
 
   // Check if event is public
   if (!event.isPublic || event.status !== 'published') {
-    return res.status(404).json({
+    res.status(404).json({
       success: false,
       error: {
         message: 'Event not found',
         code: 'EVENT_NOT_FOUND'
       }
     });
+    return;
   }
 
   res.status(200).json({
@@ -199,33 +206,15 @@ router.get('/category/:category', [
   param('category').isIn(['workshop', 'conference', 'networking', 'seminar', 'hackathon', 'meetup', 'webinar', 'other']).withMessage('Invalid category'),
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50')
-], handleValidationErrors, asyncHandler(async (req, res) => {
-  const { category } = req.params;
-  const {
-    page = 1,
-    limit = 10,
-    upcoming
-  } = req.query;
-
-  const query = {
-    categories: category,
-    isPublic: true,
-    status: 'published'
-  };
-
-  if (upcoming === 'true') {
-    query.date = { $gte: new Date() };
-  }
-
-  const options = {
-    page: parseInt(page),
-    limit: parseInt(limit),
-    sort: upcoming === 'true' ? { date: 1 } : { date: -1 }
-  };
+] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request, res: Response) => {
+  const category = req.params.category as EventCategory;
+  const page = (req.query.page as string) ?? '1';
+  const limit = (req.query.limit as string) ?? '10';
+  const upcoming = req.query.upcoming as string | undefined;
 
   const result = await Event.findAll({
-    page: options.page,
-    limit: options.limit,
+    page: parseInt(page, 10),
+    limit: parseInt(limit, 10),
     isPublic: true,
     status: 'published',
     category,
@@ -248,28 +237,5 @@ router.get('/category/:category', [
     data: result.events.map(event => event.toJSON())
   });
 }));
-
-/*
-  @desc    Create event (admin endpoint - would require authentication in production)
-  @route   POST /api/v1/events
-  @access  Private (commented out for public API)
-*/
-/*
-router.post('/', [
-  body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title is required and must be less than 200 characters'),
-  body('description').trim().isLength({ min: 1, max: 2000 }).withMessage('Description is required and must be less than 2000 characters'),
-  body('date').isISO8601().withMessage('Valid date is required'),
-  body('location').optional().trim().isLength({ max: 200 }).withMessage('Location must be less than 200 characters'),
-  body('categories').optional().isArray().withMessage('Categories must be an array'),
-  body('categories.*').optional().isIn(['workshop', 'conference', 'networking', 'seminar', 'hackathon', 'meetup', 'webinar', 'other']).withMessage('Invalid category')
-], handleValidationErrors, asyncHandler(async (req, res) => {
-  const event = await Event.create(req.body);
-
-  res.status(201).json({
-    success: true,
-    data: event
-  });
-}));
-*/
 
 export default router;

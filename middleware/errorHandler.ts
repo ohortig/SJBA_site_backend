@@ -1,8 +1,24 @@
+import type { Request, Response, NextFunction, RequestHandler } from 'express';
 import { logger } from '../logger.js';
 
-const errorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
+interface AppError extends Error {
+  status?: number;
+  code?: string;
+}
+
+interface ErrorResponse {
+  message: string;
+  status?: number;
+  code?: string;
+}
+
+const errorHandler = (
+  err: AppError,
+  req: Request,
+  res: Response,
+  _next: NextFunction
+): void => {
+  let error: ErrorResponse = { message: err.message };
 
   // Log error
   logger.error({
@@ -38,13 +54,26 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
-const notFound = (req, res, next) => {
+const notFound = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   const error = new Error(`Not found - ${req.originalUrl}`);
   res.status(404);
   next(error);
 };
 
-const asyncHandler = (fn) => (req, res, next) =>
-  Promise.resolve(fn(req, res, next)).catch(next);
+type AsyncHandler = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => Promise<unknown>;
+
+const asyncHandler = (fn: AsyncHandler): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    Promise.resolve(fn(req, res, next)).catch(next);
+  };
+};
 
 export { errorHandler, notFound, asyncHandler };

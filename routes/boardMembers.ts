@@ -1,7 +1,7 @@
-import express from 'express';
-import { param, validationResult } from 'express-validator';
-import { BoardMember } from '../models/index.js';
-import { asyncHandler, validateInput } from '../middleware/index.js';
+import express, { type Request, type Response } from 'express';
+import { param, validationResult, type ValidationChain, type Result, type ValidationError } from 'express-validator';
+import { BoardMember } from '@models/index.js';
+import { asyncHandler, validateInput } from '@middleware/index.js';
 
 const router = express.Router();
 
@@ -9,10 +9,14 @@ const router = express.Router();
 router.use(validateInput);
 
 // Validation middleware
-const handleValidationErrors = (req, res, next) => {
-  const errors = validationResult(req);
+const handleValidationErrors = (
+  req: Request,
+  res: Response,
+  next: express.NextFunction
+): void => {
+  const errors: Result<ValidationError> = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: {
         message: 'Validation failed',
@@ -20,6 +24,7 @@ const handleValidationErrors = (req, res, next) => {
         details: errors.array()
       }
     });
+    return;
   }
   next();
 };
@@ -29,7 +34,7 @@ const handleValidationErrors = (req, res, next) => {
   @route   GET /api/v1/board-members
   @access  Public
 */
-router.get('/', asyncHandler(async (req, res) => {  
+router.get('/', asyncHandler(async (_req: Request, res: Response) => {
   const boardMembers = await BoardMember.findAll();
 
   res.status(200).json({
@@ -46,17 +51,18 @@ router.get('/', asyncHandler(async (req, res) => {
 */
 router.get('/:id', [
   param('id').isUUID().withMessage('Invalid board member ID')
-], handleValidationErrors, asyncHandler(async (req, res) => {
-  const boardMember = await BoardMember.findById(req.params.id);
+] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request, res: Response) => {
+  const boardMember = await BoardMember.findById(req.params.id as string);
 
   if (!boardMember) {
-    return res.status(404).json({
+    res.status(404).json({
       success: false,
       error: {
         message: 'Board member not found',
         code: 'BOARD_MEMBER_NOT_FOUND'
       }
     });
+    return;
   }
 
   res.status(200).json({
