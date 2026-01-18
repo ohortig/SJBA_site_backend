@@ -1,6 +1,8 @@
 import express, { type Request, type Response, type NextFunction, type Application } from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
+import helmetModule from 'helmet';
+// Workaround for ESM/CJS interop issues with helmet in Node.js 24.x + TypeScript
+const helmet = (helmetModule as unknown as { default: typeof helmetModule }).default ?? helmetModule;
 import { rateLimit } from 'express-rate-limit';
 import compression from 'compression';
 import http from 'http';
