@@ -1,7 +1,7 @@
 import express, { type Request, type Response, type NextFunction, type Application } from 'express';
 import cors from 'cors';
-import helmetModule from 'helmet';
-import rateLimitModule from 'express-rate-limit';
+import helmet from 'helmet';
+import { rateLimit } from 'express-rate-limit';
 import compression from 'compression';
 import http from 'http';
 
@@ -37,7 +37,6 @@ testConnection().catch((error: Error) => {
 });
 
 // Security middleware
-const helmet = (helmetModule as unknown as { default: typeof helmetModule }).default ?? helmetModule;
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   contentSecurityPolicy: {
@@ -51,7 +50,6 @@ app.use(helmet({
 }));
 
 // Rate limiting
-const rateLimit = (rateLimitModule as unknown as { default: typeof rateLimitModule }).default ?? rateLimitModule;
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
