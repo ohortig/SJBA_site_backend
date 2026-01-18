@@ -1,8 +1,5 @@
 import express, { type Request, type Response, type NextFunction, type Application } from 'express';
 import cors from 'cors';
-import helmetModule from 'helmet';
-// Workaround for ESM/CJS interop issues with helmet in Node.js 24.x + TypeScript
-const helmet = (helmetModule as unknown as { default: typeof helmetModule }).default ?? helmetModule;
 import { rateLimit } from 'express-rate-limit';
 import compression from 'compression';
 import http from 'http';
@@ -38,18 +35,7 @@ testConnection().catch((error: Error) => {
   // Don't exit the process - let the server start and handle errors per-request
 });
 
-// Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" },
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
-    },
-  },
-}));
+// Note: Security headers are configured in vercel.json for edge-level performance
 
 // Rate limiting
 const limiter = rateLimit({
