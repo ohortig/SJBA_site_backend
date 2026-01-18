@@ -2,13 +2,15 @@
   "name": "sjba-backend",
   "version": "1.0.0",
   "description": "Backend API for SJBA website with secure public endpoints",
-  "main": "server.js",
+  "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "seed": "node scripts/seed.js",
-    "seed:clear": "node scripts/seed.js clear",
+    "start": "node dist/server.js",
+    "dev": "tsx watch server.ts",
+    "build": "tsc",
+    "build:check": "tsc --noEmit",
+    "seed": "tsx scripts/seed.ts",
+    "seed:clear": "tsx scripts/seed.ts clear",
     "test": "jest",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"
@@ -17,7 +19,8 @@
     "express",
     "api",
     "sjba",
-    "backend"
+    "backend",
+    "typescript"
   ],
   "author": "SJBA",
   "license": "MIT",
@@ -29,18 +32,25 @@
     "express": "^4.18.2",
     "express-rate-limit": "^7.1.5",
     "express-validator": "^7.0.1",
-    "helmet": "^7.1.0",
-    "morgan": "^1.10.0",
+    "helmet": "^8.1.0",
+    "nodemailer": "^7.0.12",
     "pino": "^9.9.4",
+    "pino-http": "^11.0.0",
     "pino-pretty": "^13.1.1"
   },
   "devDependencies": {
-    "eslint": "^8.55.0",
-    "jest": "^29.7.0",
+    "@types/compression": "^1.8.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.0.9",
+    "@types/nodemailer": "^7.0.5",
+    "eslint": "^9.0.0",
     "nodemon": "^3.0.2",
-    "supertest": "^6.3.3"
+    "supertest": "^7.1.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.x"
   }
 }

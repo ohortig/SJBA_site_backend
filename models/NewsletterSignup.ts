@@ -1,24 +1,39 @@
-import { getSupabase } from '../config/supabase.js';
+import { getSupabase } from '@config/supabase.js';
+import type {
+  NewsletterSignupRow,
+  NewsletterSignupData,
+  NewsletterSignupJSON,
+  NewsletterFindAllOptions,
+  NewsletterStats
+} from '@app-types/index.js';
 
 class NewsletterSignup {
-  constructor(data = {}) {
+  id: string | undefined;
+  email: string | undefined;
+  firstName: string | undefined;
+  lastName: string | undefined;
+  year: string | undefined;
+  college: string | undefined;
+  createdAt: string;
+
+  constructor(data: NewsletterSignupData = {}) {
     this.id = data.id;
     this.email = data.email;
     this.firstName = data.first_name;
     this.lastName = data.last_name;
     this.year = data.year;
     this.college = data.college;
-    this.createdAt = new Date().toISOString();
+    this.createdAt = data.created_at ?? new Date().toISOString();
   }
 
   // Convert database row to model instance
-  static fromDatabase(row) {
+  static fromDatabase(row: NewsletterSignupRow | null): NewsletterSignup | null {
     if (!row) return null;
     return new NewsletterSignup(row);
   }
 
   // Convert model instance to database format
-  toDatabase() {
+  toDatabase(): NewsletterSignupData {
     return {
       email: this.email,
       first_name: this.firstName,
@@ -29,7 +44,7 @@ class NewsletterSignup {
     };
   }
 
-  toJSON() {
+  toJSON(): NewsletterSignupJSON {
     return {
       id: this.id,
       email: this.email,
@@ -42,8 +57,8 @@ class NewsletterSignup {
   }
 
   // Validation
-  validate() {
-    const errors = [];
+  validate(): string[] {
+    const errors: string[] = [];
 
     if (!this.email || this.email.trim().length === 0) {
       errors.push('Email is required');
@@ -91,7 +106,7 @@ class NewsletterSignup {
     return errors;
   }
 
-  static async findByEmail(email) {
+  static async findByEmail(email: string): Promise<NewsletterSignup | null> {
     const supabase = getSupabase();
 
     const { data, error } = await supabase
@@ -107,10 +122,10 @@ class NewsletterSignup {
       throw new Error(`Failed to fetch newsletter signup: ${error.message}`);
     }
 
-    return NewsletterSignup.fromDatabase(data);
+    return NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
   }
 
-  static async findById(id) {
+  static async findById(id: string): Promise<NewsletterSignup | null> {
     const supabase = getSupabase();
 
     const { data, error } = await supabase
@@ -126,12 +141,12 @@ class NewsletterSignup {
       throw new Error(`Failed to fetch newsletter signup: ${error.message}`);
     }
 
-    return NewsletterSignup.fromDatabase(data);
+    return NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
   }
 
-  static async create(signupData) {
+  static async create(signupData: NewsletterSignupData): Promise<NewsletterSignup | null> {
     const signup = new NewsletterSignup(signupData);
-    
+
     // Normalize email
     if (signup.email) {
       signup.email = signup.email.toLowerCase().trim();
@@ -158,10 +173,10 @@ class NewsletterSignup {
       throw new Error(`Failed to create newsletter signup: ${error.message}`);
     }
 
-    return NewsletterSignup.fromDatabase(data);
+    return NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
   }
 
-  async save() {
+  async save(): Promise<NewsletterSignup> {
     // Normalize email
     if (this.email) {
       this.email = this.email.toLowerCase().trim();
@@ -189,7 +204,10 @@ class NewsletterSignup {
       }
 
       // Update instance with returned data
-      Object.assign(this, NewsletterSignup.fromDatabase(data));
+      const updated = NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
+      if (updated) {
+        Object.assign(this, updated);
+      }
     } else {
       // Create new
       const { data, error } = await supabase
@@ -206,15 +224,18 @@ class NewsletterSignup {
       }
 
       // Update instance with returned data
-      Object.assign(this, NewsletterSignup.fromDatabase(data));
+      const created = NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
+      if (created) {
+        Object.assign(this, created);
+      }
     }
 
     return this;
   }
 
-  static async findAll(options = {}) {
+  static async findAll(options: NewsletterFindAllOptions = {}): Promise<NewsletterSignup[]> {
     const supabase = getSupabase();
-    const { 
+    const {
       active,
       page = 1,
       limit = 50,
@@ -242,26 +263,24 @@ class NewsletterSignup {
       throw new Error(`Failed to fetch newsletter signups: ${error.message}`);
     }
 
-    return data.map(row => NewsletterSignup.fromDatabase(row));
+    return (data as NewsletterSignupRow[]).map(row => NewsletterSignup.fromDatabase(row)!);
   }
 
-  static async count(options = {}) {
+  static async count(): Promise<number> {
     const supabase = getSupabase();
 
-    let query = supabase
+    const { count, error } = await supabase
       .from('newsletter_signups')
       .select('*', { count: 'exact', head: true });
-
-    const { count, error } = await query;
 
     if (error) {
       throw new Error(`Failed to count newsletter signups: ${error.message}`);
     }
 
-    return count;
+    return count ?? 0;
   }
 
-  static async getStats() {
+  static async getStats(): Promise<NewsletterStats> {
     const supabase = getSupabase();
 
     const [totalResult] = await Promise.all([
