@@ -40,7 +40,7 @@ router.get('/', asyncHandler(async (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     count: boardMembers.length,
-    data: boardMembers.map(member => member.toJSON())
+    data: boardMembers.map(member => BoardMember.toJSON(member.toDatabase()))
   });
 }));
 
@@ -67,7 +67,7 @@ router.get('/:id', [
 
   res.status(200).json({
     success: true,
-    data: boardMember.toJSON()
+    data: BoardMember.toJSON(boardMember.toDatabase())
   });
 }));
 

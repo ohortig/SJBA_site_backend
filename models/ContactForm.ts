@@ -1,25 +1,25 @@
 import { getSupabase } from '../config/supabase.js';
 import { sendEmail, isEmailEnabled } from '../config/email.js';
-import type { ContactSubmissionRow, ContactFormData, ContactFormJSON } from '../types/index.js';
+import type { ContactSubmissionRow } from '../types/index.js';
 import { logger } from '../logger.js';
 
 class ContactForm {
      id: string | undefined;
-     firstName: string | undefined;
-     lastName: string | undefined;
-     email: string | undefined;
-     company: string | null | undefined;
-     message: string | undefined;
+     firstName: string;
+     lastName: string;
+     email: string;
+     company: string | null;
+     message: string;
      createdAt: string;
 
-     constructor(data: ContactFormData = {}) {
+     constructor(data: ContactSubmissionRow) {
           this.id = data.id;
           this.firstName = data.first_name;
           this.lastName = data.last_name;
           this.email = data.email;
           this.company = data.company;
           this.message = data.message;
-          this.createdAt = data.created_at ?? new Date().toISOString();
+          this.createdAt = data.created_at;
      }
 
      // Convert database row to model instance
@@ -28,8 +28,8 @@ class ContactForm {
           return new ContactForm(row);
      }
 
-     // Convert model instance to database format
-     toDatabase(): ContactFormData {
+     // Convert model instance to database format (snake_case)
+     toDatabase(): Omit<ContactSubmissionRow, 'id'> {
           return {
                first_name: this.firstName,
                last_name: this.lastName,
@@ -40,15 +40,16 @@ class ContactForm {
           };
      }
 
-     toJSON(): ContactFormJSON {
+     // Convert to JSON response format (camelCase)
+     static toJSON(row: ContactSubmissionRow) {
           return {
-               id: this.id,
-               firstName: this.firstName,
-               lastName: this.lastName,
-               email: this.email,
-               company: this.company,
-               message: this.message,
-               createdAt: this.createdAt
+               id: row.id,
+               firstName: row.first_name,
+               lastName: row.last_name,
+               email: row.email,
+               company: row.company,
+               message: row.message,
+               createdAt: row.created_at
           };
      }
 
@@ -98,8 +99,25 @@ class ContactForm {
           return errors;
      }
 
-     static async create(formData: ContactFormData): Promise<ContactForm | null> {
-          const form = new ContactForm(formData);
+     static async create(formData: {
+          first_name: string;
+          last_name: string;
+          email: string;
+          company: string | null;
+          message: string;
+     }): Promise<ContactForm | null> {
+          // Create a temporary row object for the constructor
+          const tempRow: ContactSubmissionRow = {
+               id: '',
+               first_name: formData.first_name,
+               last_name: formData.last_name,
+               email: formData.email,
+               company: formData.company,
+               message: formData.message,
+               created_at: new Date().toISOString()
+          };
+
+          const form = new ContactForm(tempRow);
 
           // Normalize email
           if (form.email) {

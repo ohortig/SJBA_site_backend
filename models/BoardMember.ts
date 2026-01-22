@@ -1,5 +1,5 @@
 import { getSupabase } from '../config/supabase.js';
-import type { BoardMemberRow, BoardMemberData, BoardMemberJSON } from '../types/index.js';
+import type { BoardMemberRow } from '../types/index.js';
 
 class BoardMember {
   id: string;
@@ -14,7 +14,7 @@ class BoardMember {
   headshotFile: string | null;
   orderIndex: number;
 
-  constructor(data: BoardMemberData) {
+  constructor(data: BoardMemberRow) {
     this.id = data.id;
     this.fullName = data.full_name;
     this.position = data.position;
@@ -33,23 +33,23 @@ class BoardMember {
     return new BoardMember(row);
   }
 
-  toDatabase(): BoardMemberData {
+  static toJSON(apiMember: BoardMemberRow) {
     return {
-      id: this.id,
-      full_name: this.fullName,
-      position: this.position,
-      bio: this.bio,
-      major: this.major,
-      year: this.year,
-      hometown: this.hometown,
-      linkedin_url: this.linkedinUrl,
-      email: this.email,
-      headshot_file: this.headshotFile,
-      order_index: this.orderIndex
+      id: apiMember.id,
+      position: apiMember.position,
+      fullName: apiMember.full_name,
+      bio: apiMember.bio.replace(/\\n/g, '\n'), // convert escaped newlines to actual newlines
+      major: apiMember.major,
+      year: apiMember.year,
+      hometown: apiMember.hometown,
+      linkedinUrl: apiMember.linkedin_url,
+      email: apiMember.email,
+      headshotFile: apiMember.headshot_file,
+      orderIndex: apiMember.order_index,
     };
   }
 
-  toJSON(): BoardMemberJSON {
+  toDatabase(): BoardMemberRow {
     return {
       id: this.id,
       full_name: this.fullName,
@@ -131,7 +131,7 @@ class BoardMember {
     return BoardMember.fromDatabase(data as BoardMemberRow);
   }
 
-  static async create(memberData: BoardMemberData): Promise<BoardMember | null> {
+  static async create(memberData: BoardMemberRow): Promise<BoardMember | null> {
     const member = new BoardMember(memberData);
     const errors = member.validate();
 

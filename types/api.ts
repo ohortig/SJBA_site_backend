@@ -22,11 +22,3 @@ export interface PaginationInfo {
      hasNext: boolean;
      hasPrev: boolean;
 }
-
-export interface EventPaginatedResult {
-     events: import('../models/Event.js').default[];
-     total: number;
-     page: number;
-     limit: number;
-     totalPages: number;
-}
