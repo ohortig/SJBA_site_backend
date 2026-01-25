@@ -10,6 +10,7 @@ export interface EventRow {
      flyer_file: string | null;
      rsvp_link: string | null;
      description: string | null;
+     is_visible: boolean;
 }
 
 export interface EventsQueryParams {

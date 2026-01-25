@@ -17,6 +17,7 @@ class Event {
   flyerFile: string | null;
   rsvpLink: string | null;
   description: string | null;
+  isVisible: boolean;
 
   constructor(data: EventRow) {
     this.id = data.id;
@@ -30,6 +31,7 @@ class Event {
     this.flyerFile = data.flyer_file;
     this.rsvpLink = data.rsvp_link;
     this.description = data.description;
+    this.isVisible = data.is_visible;
   }
 
   static fromDatabase(row: EventRow | null): Event | null {
@@ -65,7 +67,8 @@ class Event {
       location: this.location,
       flyer_file: this.flyerFile,
       rsvp_link: this.rsvpLink,
-      description: this.description
+      description: this.description,
+      is_visible: this.isVisible
     };
   }
 
@@ -84,11 +87,13 @@ class Event {
 
     let query = supabase
       .from('events')
-      .select('*');
+      .select('*')
+      .eq('is_visible', true);
 
     let countQuery = supabase
       .from('events')
-      .select('*', { count: 'exact', head: true });
+      .select('*', { count: 'exact', head: true })
+      .eq('is_visible', true);
 
     // Search filter (searches in title and description)
     if (search) {
@@ -145,6 +150,7 @@ class Event {
       .from('events')
       .select('*')
       .eq('id', id)
+      .eq('is_visible', true)
       .single();
 
     if (error) {
@@ -168,6 +174,7 @@ class Event {
       .from('events')
       .select('*')
       .gte('start_time', now)
+      .eq('is_visible', true)
       .order('start_time', { ascending: true })
       .limit(limit);
 
