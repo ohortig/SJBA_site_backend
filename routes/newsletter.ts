@@ -106,8 +106,7 @@ router.post('/', [
     logger.error({
       message: 'Critical: Database operation failed after successful Mailchimp subscription',
       email,
-      dbError: dbError.message || dbError,
-      timestamp: new Date().toISOString()
+      dbError: dbError.message || dbError
     });
 
     try {
@@ -123,7 +122,6 @@ router.post('/', [
         email,
         dbError: dbError.message || dbError,
         rollbackError: rollbackError.message || rollbackError,
-        timestamp: new Date().toISOString(),
         action: 'MANUAL_RECONCILIATION_REQUIRED'
       });
     }

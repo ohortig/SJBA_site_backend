@@ -61,8 +61,9 @@ export const removeSubscriber = async (email: string): Promise<void> => {
      const listId = process.env.MAILCHIMP_LIST_ID;
 
      if (!listId) {
-          logger.error('MAILCHIMP_LIST_ID is not defined in environment variables');
-          return;
+          const error = new Error('MAILCHIMP_LIST_ID is not defined in environment variables');
+          logger.error(error.message);
+          throw error;
      }
 
      const subscriberHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
