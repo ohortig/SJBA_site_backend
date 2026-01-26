@@ -4,9 +4,26 @@ import { logger } from '../logger.js';
 
 // Initialize Mailchimp client
 export const initializeMailchimp = (): void => {
+     const apiKey = process.env.MAILCHIMP_API_KEY;
+     const serverPrefix = process.env.MAILCHIMP_SERVER_PREFIX;
+
+     if (!apiKey || !serverPrefix) {
+          const missingVars: string[] = [];
+          if (!apiKey) {
+               missingVars.push('MAILCHIMP_API_KEY');
+          }
+          if (!serverPrefix) {
+               missingVars.push('MAILCHIMP_SERVER_PREFIX');
+          }
+
+          const message = `Missing required Mailchimp environment variable(s): ${missingVars.join(', ')}`;
+          logger.error(message);
+          throw new Error(message);
+     }
+
      client.setConfig({
-          apiKey: process.env.MAILCHIMP_API_KEY,
-          server: process.env.MAILCHIMP_SERVER_PREFIX,
+          apiKey,
+          server: serverPrefix,
      });
 };
 
