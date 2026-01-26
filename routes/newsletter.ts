@@ -39,7 +39,8 @@ router.post('/', [
   body('email')
     .isEmail()
     .normalizeEmail()
-    .withMessage('Please provide a valid email address'),
+    .matches(/@(.+\.)?nyu\.edu$/i)
+    .withMessage('Please use your NYU email address (@nyu.edu)'),
   body('first_name')
     .notEmpty()
     .withMessage('First name is required')
@@ -52,25 +53,11 @@ router.post('/', [
     .trim()
     .isLength({ max: 50 })
     .withMessage('Last name must be less than 50 characters'),
-  body('year')
-    .notEmpty()
-    .withMessage('Year is required')
-    .trim()
-    .isLength({ max: 50 })
-    .withMessage('Year must be less than 50 characters'),
-  body('college')
-    .notEmpty()
-    .withMessage('College is required')
-    .trim()
-    .isLength({ max: 50 })
-    .withMessage('College must be less than 50 characters'),
 ] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request, res: Response) => {
-  const { email, first_name, last_name, year, college } = req.body as {
+  const { email, first_name, last_name } = req.body as {
     email: string;
     first_name: string;
     last_name: string;
-    year: string;
-    college: string;
   };
 
   // Check if email already exists
@@ -87,17 +74,24 @@ router.post('/', [
     return;
   }
 
-  const signupData = {
+  // Check if email already exists
+  let newsletterSignup = await NewsletterSignup.findByEmail(email);
+
+  if (newsletterSignup) {
+    // Update existing signup
+    newsletterSignup.firstName = first_name;
+    newsletterSignup.lastName = last_name;
+    await newsletterSignup.save();
+  } else {
+    // Create new signup
+    newsletterSignup = await NewsletterSignup.create({
     email,
     first_name,
-    last_name,
-    year,
-    college
-  };
+      last_name
+    });
+  }
 
-  const newsletterSignup = await NewsletterSignup.create(signupData);
-
-  res.status(201).json({
+  res.status(200).json({
     success: true,
     message: 'Successfully signed up for newsletter',
     data: newsletterSignup?.toJSON()
