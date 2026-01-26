@@ -2,6 +2,7 @@ import express, { type Request, type Response } from 'express';
 import { body, validationResult, type ValidationChain, type Result, type ValidationError } from 'express-validator';
 import { NewsletterSignup } from '../models/index.js';
 import { asyncHandler, validateInput } from '../middleware/index.js';
+import { addSubscriber } from '../config/index.js';
 
 const router = express.Router();
 
@@ -60,15 +61,16 @@ router.post('/', [
     last_name: string;
   };
 
-  // Check if email already exists
-  const existingSignup = await NewsletterSignup.findByEmail(email);
-
-  if (existingSignup) {
-    res.status(409).json({
+  // Attempt Mailchimp subscription first
+  try {
+    await addSubscriber(email, first_name, last_name);
+  } catch (error) {
+    // If Mailchimp fails, do not proceed to DB and return error to user
+    res.status(500).json({
       success: false,
       error: {
-        message: 'Email is already subscribed to the newsletter',
-        code: 'EMAIL_ALREADY_SUBSCRIBED'
+        message: 'Failed to subscribe to newsletter. Please try again later.',
+        code: 'MAILCHIMP_ERROR'
       }
     });
     return;
@@ -85,8 +87,8 @@ router.post('/', [
   } else {
     // Create new signup
     newsletterSignup = await NewsletterSignup.create({
-    email,
-    first_name,
+      email,
+      first_name,
       last_name
     });
   }

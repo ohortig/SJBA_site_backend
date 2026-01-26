@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 
 import { initializeSupabase, testConnection } from './config/supabase.js';
 import { initializeEmailTransporter } from './config/email.js';
+import { initializeMailchimp, testMailchimpConnection } from './config/mailchimp.js';
 import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 
 import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes } from './routes/index.js';
@@ -26,6 +27,8 @@ if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
 
 initializeSupabase();
 initializeEmailTransporter();
+initializeMailchimp();
+testMailchimpConnection();
 
 testConnection().catch((error: Error) => {
   logger.error({
