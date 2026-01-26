@@ -117,7 +117,7 @@ app.use('/api', validateReferer);
 app.get('/', (_req: Request, res: Response): void => {
   res.json({
     name: 'SJBA API',
-    version: '0.5.0',
+    version: '1.0.0',
     status: 'running',
     description: 'Backend API for SJBA website',
     endpoints: {
@@ -161,6 +161,10 @@ app.get('/v1', (_req: Request, res: Response): void => {
       'GET /v1/board-members': 'Get all board members',
       'GET /v1/board-members/:id': 'Get specific board member',
       'POST /v1/newsletter-sign-ups': 'Sign up for newsletter',
+      'GET /v1/events': 'Get all events',
+      'GET /v1/events/upcoming': 'Get upcoming events',
+      'GET /v1/events/:id': 'Get specific event',
+      'POST /v1/contact': 'Submit contact form',
     }
   });
 });
