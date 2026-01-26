@@ -28,7 +28,13 @@ if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
 initializeSupabase();
 initializeEmailTransporter();
 initializeMailchimp();
-testMailchimpConnection();
+testMailchimpConnection().catch((error: Error) => {
+  logger.error({
+    message: 'Failed to connect to Mailchimp during startup - will retry on first request',
+    error: error.message
+  });
+  // Don't exit the process - let the server start and handle errors per-request
+});
 
 testConnection().catch((error: Error) => {
   logger.error({
