@@ -2,7 +2,8 @@ import express, { type Request, type Response } from 'express';
 import { body, validationResult, type ValidationChain, type Result, type ValidationError } from 'express-validator';
 import { NewsletterSignup } from '../models/index.js';
 import { asyncHandler, validateInput } from '../middleware/index.js';
-import { addSubscriber } from '../config/index.js';
+import { addSubscriber, removeSubscriber } from '../config/index.js';
+import { logger } from '../logger.js';
 
 const router = express.Router();
 
@@ -76,28 +77,63 @@ router.post('/', [
     return;
   }
 
-  // Check if email already exists
-  let newsletterSignup = await NewsletterSignup.findByEmail(email);
+  // Now attempt database operation with rollback on failure
+  try {
+    // Check if email already exists
+    let newsletterSignup = await NewsletterSignup.findByEmail(email);
 
-  if (newsletterSignup) {
-    // Update existing signup
-    newsletterSignup.firstName = first_name;
-    newsletterSignup.lastName = last_name;
-    await newsletterSignup.save();
-  } else {
-    // Create new signup
-    newsletterSignup = await NewsletterSignup.create({
+    if (newsletterSignup) {
+      // Update existing signup
+      newsletterSignup.firstName = first_name;
+      newsletterSignup.lastName = last_name;
+      await newsletterSignup.save();
+    } else {
+      // Create new signup
+      newsletterSignup = await NewsletterSignup.create({
+        email,
+        first_name,
+        last_name
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Successfully signed up for newsletter',
+      data: newsletterSignup?.toJSON()
+    });
+  } catch (dbError: any) {
+    // Database operation failed - attempt to rollback Mailchimp subscription
+    logger.error({
+      message: 'Critical: Database operation failed after successful Mailchimp subscription',
       email,
-      first_name,
-      last_name
+      dbError: dbError.message || dbError
+    });
+
+    try {
+      await removeSubscriber(email);
+      logger.info({
+        message: 'Successfully rolled back Mailchimp subscription after database failure',
+        email
+      });
+    } catch (rollbackError: any) {
+      // Rollback failed - this is a critical inconsistency that requires manual intervention
+      logger.error({
+        message: 'CRITICAL INCONSISTENCY: Failed to rollback Mailchimp subscription after database failure',
+        email,
+        dbError: dbError.message || dbError,
+        rollbackError: rollbackError.message || rollbackError,
+        action: 'MANUAL_RECONCILIATION_REQUIRED'
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: {
+        message: 'Failed to complete newsletter signup. Please try again later.',
+        code: 'DATABASE_ERROR'
+      }
     });
   }
-
-  res.status(200).json({
-    success: true,
-    message: 'Successfully signed up for newsletter',
-    data: newsletterSignup?.toJSON()
-  });
 }));
 
 export default router;
