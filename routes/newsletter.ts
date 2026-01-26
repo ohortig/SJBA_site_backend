@@ -78,6 +78,7 @@ router.post('/', [
 
   // Check if email already exists
   let newsletterSignup = await NewsletterSignup.findByEmail(email);
+  let isNewSignup = false;
 
   if (newsletterSignup) {
     // Update existing signup
@@ -86,6 +87,7 @@ router.post('/', [
     await newsletterSignup.save();
   } else {
     // Create new signup
+    isNewSignup = true;
     newsletterSignup = await NewsletterSignup.create({
       email,
       first_name,
@@ -93,7 +95,7 @@ router.post('/', [
     });
   }
 
-  res.status(200).json({
+  res.status(isNewSignup ? 201 : 200).json({
     success: true,
     message: 'Successfully signed up for newsletter',
     data: newsletterSignup?.toJSON()
