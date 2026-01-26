@@ -108,7 +108,6 @@ router.post('/', [
       email,
       dbError: dbError.message || dbError
     });
-
     try {
       await removeSubscriber(email);
       logger.info({
@@ -134,6 +133,12 @@ router.post('/', [
       }
     });
   }
+
+  res.status(isNewSignup ? 201 : 200).json({
+    success: true,
+    message: 'Successfully signed up for newsletter',
+    data: newsletterSignup?.toJSON()
+  }); 
 }));
 
 export default router;
