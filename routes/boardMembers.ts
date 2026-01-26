@@ -31,7 +31,7 @@ const handleValidationErrors = (
 
 /*
   @desc    Get all board members
-  @route   GET /api/v1/board-members
+  @route   GET /v1/board-members
   @access  Public
 */
 router.get('/', asyncHandler(async (_req: Request, res: Response) => {
@@ -46,7 +46,7 @@ router.get('/', asyncHandler(async (_req: Request, res: Response) => {
 
 /*
   @desc    Get single board member
-  @route   GET /api/v1/board-members/:id
+  @route   GET /v1/board-members/:id
   @access  Public
 */
 router.get('/:id', [

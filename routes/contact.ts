@@ -32,7 +32,7 @@ const handleValidationErrors = (
 
 /*
   @desc    Submit contact form
-  @route   POST /api/v1/contact
+  @route   POST /v1/contact
   @access  Public
 */
 

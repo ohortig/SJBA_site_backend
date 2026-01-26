@@ -19,15 +19,15 @@ A secure and scalable Node.js/Express backend API for the Stern Jewish Business 
 ## API Endpoints
 
 ### Public Endpoints
-- `GET /api/v1/board-members` - Get all board members
-- `GET /api/v1/board-members/:id` - Get specific board member
-- `POST /api/v1/newsletter-sign-ups` - Subscribe to newsletter
-- `GET /api/v1/events` - Get upcoming events
+- `GET /v1/board-members` - Get all board members
+- `GET /v1/board-members/:id` - Get specific board member
+- `POST /v1/newsletter-sign-ups` - Subscribe to newsletter
+- `GET /v1/events` - Get upcoming events
 - `GET /health` - Health check endpoint
 
 ### System Endpoints
 - `GET /` - API information and status
-- `GET /api/v1` - API documentation
+- `GET /v1` - API documentation
 
 ## Local Development
 

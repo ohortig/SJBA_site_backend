@@ -122,7 +122,7 @@ app.get('/', (_req: Request, res: Response): void => {
     description: 'Backend API for SJBA website',
     endpoints: {
       health: '/health',
-      api: '/api/v1'
+      api: '/v1'
     }
   });
 });
@@ -146,21 +146,21 @@ app.get('/favicon.png', (_req: Request, res: Response): void => {
 });
 
 // API Routes
-app.use('/api/v1/board-members', boardMembersRoutes);
-app.use('/api/v1/newsletter-sign-ups', newsletterRoutes);
-app.use('/api/v1/events', eventsRoutes);
-app.use('/api/v1/contact', contactRoutes);
+app.use('/v1/board-members', boardMembersRoutes);
+app.use('/v1/newsletter-sign-ups', newsletterRoutes);
+app.use('/v1/events', eventsRoutes);
+app.use('/v1/contact', contactRoutes);
 
 // API info endpoint
-app.get('/api/v1', (_req: Request, res: Response): void => {
+app.get('/v1', (_req: Request, res: Response): void => {
   res.json({
     name: 'SJBA API',
-    version: '0.5.0',
+    version: '1.0.0',
     description: 'Backend API for SJBA website with secure public endpoints',
     endpoints: {
-      'GET /api/v1/board-members': 'Get all board members',
-      'GET /api/v1/board-members/:id': 'Get specific board member',
-      'POST /api/v1/newsletter-sign-ups': 'Sign up for newsletter',
+      'GET /v1/board-members': 'Get all board members',
+      'GET /v1/board-members/:id': 'Get specific board member',
+      'POST /v1/newsletter-sign-ups': 'Sign up for newsletter',
     }
   });
 });
@@ -228,7 +228,7 @@ if (process.env.VERCEL !== '1') {
       environment: process.env.NODE_ENV || 'development',
       database: 'Supabase PostgreSQL',
       healthCheck: `http://localhost:${PORT}/health`,
-      apiInfo: `http://localhost:${PORT}/api/v1`
+      apiInfo: `http://localhost:${PORT}/v1`
     });
   });
 }

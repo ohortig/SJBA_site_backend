@@ -39,7 +39,7 @@ const handleValidationErrors = (
 };
 
 // @desc    Get all events with pagination and filtering
-// @route   GET /api/v1/events
+// @route   GET /v1/events
 // @access  Public
 router.get('/', [
   query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
@@ -80,7 +80,7 @@ router.get('/', [
 }));
 
 // @desc    Get upcoming events
-// @route   GET /api/v1/events/upcoming
+// @route   GET /v1/events/upcoming
 // @access  Public
 router.get('/upcoming', [
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50')
@@ -97,7 +97,7 @@ router.get('/upcoming', [
 }));
 
 // @desc    Get single event
-// @route   GET /api/v1/events/:id
+// @route   GET /v1/events/:id
 // @access  Public
 router.get('/:id', [
   param('id').isUUID().withMessage('Invalid event ID')

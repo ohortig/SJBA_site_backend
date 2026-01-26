@@ -33,7 +33,7 @@ const handleValidationErrors = (
 
 /*
   @desc    Sign up for newsletter
-  @route   POST /api/v1/newsletter-sign-ups
+  @route   POST /v1/newsletter-sign-ups
   @access  Public
 */
 
