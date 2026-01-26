@@ -56,3 +56,22 @@ export const addSubscriber = async (email: string, firstName: string, lastName: 
           throw error; // Re-throw to handle in the route
      }
 };
+
+export const removeSubscriber = async (email: string): Promise<void> => {
+     const listId = process.env.MAILCHIMP_LIST_ID;
+
+     if (!listId) {
+          logger.error('MAILCHIMP_LIST_ID is not defined in environment variables');
+          return;
+     }
+
+     const subscriberHash = crypto.createHash('md5').update(email.toLowerCase()).digest('hex');
+
+     try {
+          await client.lists.deleteListMember(listId, subscriberHash);
+          logger.info(`Successfully removed subscriber ${email} from Mailchimp list`);
+     } catch (error: any) {
+          logger.error('Error removing subscriber from Mailchimp:', error);
+          throw error; // Re-throw to handle in the route
+     }
+};
