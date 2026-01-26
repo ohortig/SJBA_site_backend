@@ -3,8 +3,6 @@ export interface NewsletterSignupRow {
      email: string;
      first_name: string;
      last_name: string;
-     year: string;
-     college: string;
      created_at: string;
      is_active?: boolean;
 }
@@ -14,8 +12,6 @@ export interface NewsletterSignupData {
      email?: string;
      first_name?: string;
      last_name?: string;
-     year?: string;
-     college?: string;
      created_at?: string;
 }
 
@@ -24,8 +20,6 @@ export interface NewsletterSignupJSON {
      email: string | undefined;
      firstName: string | undefined;
      lastName: string | undefined;
-     year: string | undefined;
-     college: string | undefined;
      createdAt: string;
 }
 

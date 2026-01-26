@@ -8,6 +8,7 @@ import dotenv from 'dotenv';
 
 import { initializeSupabase, testConnection } from './config/supabase.js';
 import { initializeEmailTransporter } from './config/email.js';
+import { initializeMailchimp, testMailchimpConnection } from './config/mailchimp.js';
 import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 
 import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes } from './routes/index.js';
@@ -26,6 +27,14 @@ if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
 
 initializeSupabase();
 initializeEmailTransporter();
+initializeMailchimp();
+testMailchimpConnection().catch((error: Error) => {
+  logger.error({
+    message: 'Failed to connect to Mailchimp during startup - will retry on first request',
+    error: error.message
+  });
+  // Don't exit the process - let the server start and handle errors per-request
+});
 
 testConnection().catch((error: Error) => {
   logger.error({

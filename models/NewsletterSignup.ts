@@ -12,8 +12,6 @@ class NewsletterSignup {
   email: string | undefined;
   firstName: string | undefined;
   lastName: string | undefined;
-  year: string | undefined;
-  college: string | undefined;
   createdAt: string;
 
   constructor(data: NewsletterSignupData = {}) {
@@ -21,8 +19,6 @@ class NewsletterSignup {
     this.email = data.email;
     this.firstName = data.first_name;
     this.lastName = data.last_name;
-    this.year = data.year;
-    this.college = data.college;
     this.createdAt = data.created_at ?? new Date().toISOString();
   }
 
@@ -38,8 +34,6 @@ class NewsletterSignup {
       email: this.email,
       first_name: this.firstName,
       last_name: this.lastName,
-      year: this.year,
-      college: this.college,
       created_at: this.createdAt
     };
   }
@@ -50,8 +44,6 @@ class NewsletterSignup {
       email: this.email,
       firstName: this.firstName,
       lastName: this.lastName,
-      year: this.year,
-      college: this.college,
       createdAt: this.createdAt
     };
   }
@@ -69,6 +61,17 @@ class NewsletterSignup {
       if (!emailRegex.test(this.email.toLowerCase())) {
         errors.push('Please enter a valid email');
       }
+
+      const nyuEmailPatterns = [
+        /@nyu\.edu$/i,
+        /@.*\.nyu\.edu$/i
+      ];
+
+      const isNyuEmail = nyuEmailPatterns.some(pattern => pattern.test(this.email!.toLowerCase()));
+
+      if (!isNyuEmail) {
+        errors.push('Please use your NYU email address');
+      }
     }
 
     if (!this.firstName || this.firstName.trim().length === 0) {
@@ -79,28 +82,12 @@ class NewsletterSignup {
       errors.push('Last name is required');
     }
 
-    if (!this.year || this.year.trim().length === 0) {
-      errors.push('Year is required');
-    }
-
-    if (!this.college || this.college.trim().length === 0) {
-      errors.push('College is required');
-    }
-
     if (this.firstName && this.firstName.length > 50) {
       errors.push('First name cannot exceed 50 characters');
     }
 
     if (this.lastName && this.lastName.length > 50) {
       errors.push('Last name cannot exceed 50 characters');
-    }
-
-    if (this.year && this.year.length > 50) {
-      errors.push('Year cannot exceed 50 characters');
-    }
-
-    if (this.college && this.college.length > 50) {
-      errors.push('College cannot exceed 50 characters');
     }
 
     return errors;
