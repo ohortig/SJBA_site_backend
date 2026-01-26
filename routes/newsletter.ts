@@ -40,7 +40,7 @@ router.post('/', [
   body('email')
     .isEmail()
     .normalizeEmail()
-    .matches(/@(.+\.)?nyu\.edu$/i)
+    .matches(/@([a-z0-9-]+\.)?nyu\.edu$/i)
     .withMessage('Please use your NYU email address (@nyu.edu)'),
   body('first_name')
     .notEmpty()
