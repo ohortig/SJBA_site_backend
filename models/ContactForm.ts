@@ -156,7 +156,7 @@ class ContactForm {
 
           const recipientEmail = process.env.CONTACT_NOTIFICATION_EMAIL || 'sjba@stern.nyu.edu';
 
-          const subject = `New Contact Form Submission from ${this.firstName} ${this.lastName}`;
+          const subject = `Contact Form Submission from ${this.firstName} ${this.lastName}`;
 
           const text = `
 New Contact Form Submission
