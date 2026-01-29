@@ -5,6 +5,14 @@ interface LoggerConfig {
   level: string;
   transport?: {
     target: string;
+    options?: {
+      colorize: boolean;
+      singleLine: boolean;
+      translateTime: string;
+      ignore: string;
+      messageKey: string;
+      customColors?: string;
+    };
   };
 }
 
@@ -16,7 +24,14 @@ const loggerConfig: LoggerConfig = {
 // Use pino-pretty unless in production
 if (process.env.NODE_ENV !== 'production') {
   loggerConfig.transport = {
-    target: 'pino-pretty'
+    target: 'pino-pretty',
+    options: {
+      colorize: false,
+      singleLine: true,
+      translateTime: 'HH:MM:ss',
+      ignore: 'pid,hostname',
+      messageKey: 'message'
+    }
   };
 }
 
