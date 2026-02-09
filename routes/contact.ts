@@ -22,7 +22,10 @@ const handleValidationErrors = (
                error: {
                     message: 'Validation failed',
                     code: 'VALIDATION_ERROR',
-                    details: errors.array()
+                    details: errors.array().map(err => ({
+                         field: 'path' in err ? err.path : undefined,
+                         message: err.msg
+                    }))
                }
           });
           return;
