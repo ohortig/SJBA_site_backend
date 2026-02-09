@@ -158,6 +158,12 @@ class ContactForm {
 
           const subject = `Contact Form Submission from ${this.firstName} ${this.lastName}`;
 
+          const submittedAt = new Date(this.createdAt).toLocaleString('en-US', {
+               timeZone: 'America/New_York',
+               dateStyle: 'full',
+               timeStyle: 'long'
+          });
+
           const text = `
 New Contact Form Submission
 
@@ -169,7 +175,7 @@ Message:
 ${this.message}
 
 ---
-Submitted at: ${new Date(this.createdAt).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'long' })}
+Submitted at: ${submittedAt}
     `.trim();
 
           const html = `
@@ -208,7 +214,7 @@ Submitted at: ${new Date(this.createdAt).toLocaleString('en-US', { timeZone: 'Am
       </div>
     </div>
     <div class="footer">
-      Submitted at: ${new Date(this.createdAt).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'long' })}
+      Submitted at: ${submittedAt}
     </div>
   </div>
 </body>
