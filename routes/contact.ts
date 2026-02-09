@@ -95,14 +95,25 @@ router.post('/', [
           return;
      }
 
-     // Send notification email (non-blocking - we don't fail if email fails)
-     contactSubmission.sendNotificationEmail().catch((error) => {
+     // Send notification email - must await in serverless environment
+     // to ensure email completes before function context is frozen
+     try {
+          await contactSubmission.sendNotificationEmail();
+     } catch (error) {
           logger.error({
                message: 'Failed to send contact notification email',
                error: error instanceof Error ? error.message : 'Unknown error',
                submissionId: contactSubmission.id
           });
-     });
+          res.status(500).json({
+               success: false,
+               error: {
+                    message: 'Failed to send notification email. Please try again later or contact us directly at sjba@stern.nyu.edu.',
+                    code: 'EMAIL_SEND_FAILED'
+               }
+          });
+          return;
+     }
 
      res.status(201).json({
           success: true,
