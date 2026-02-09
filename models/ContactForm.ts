@@ -169,7 +169,7 @@ Message:
 ${this.message}
 
 ---
-Submitted at: ${new Date(this.createdAt).toLocaleString()}
+Submitted at: ${new Date(this.createdAt).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'long' })}
     `.trim();
 
           const html = `
@@ -208,7 +208,7 @@ Submitted at: ${new Date(this.createdAt).toLocaleString()}
       </div>
     </div>
     <div class="footer">
-      Submitted at: ${new Date(this.createdAt).toLocaleString()}
+      Submitted at: ${new Date(this.createdAt).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'full', timeStyle: 'long' })}
     </div>
   </div>
 </body>
