@@ -1,0 +1,121 @@
+import { getSupabase } from '../config/supabase.js';
+import type { MemberRow } from '../types/index.js';
+
+class Member {
+     id: string;
+     firstName: string;
+     lastName: string;
+     semester: string;
+
+     constructor(data: MemberRow) {
+          this.id = data.id;
+          this.firstName = data.first_name;
+          this.lastName = data.last_name;
+          this.semester = data.semester;
+     }
+
+     static fromDatabase(row: MemberRow | null): Member | null {
+          if (!row) return null;
+          return new Member(row);
+     }
+
+     static toJSON(apiMember: MemberRow) {
+          return {
+               id: apiMember.id,
+               firstName: apiMember.first_name,
+               lastName: apiMember.last_name,
+               semester: apiMember.semester,
+          };
+     }
+
+     toDatabase(): MemberRow {
+          return {
+               id: this.id,
+               first_name: this.firstName,
+               last_name: this.lastName,
+               semester: this.semester,
+          };
+     }
+
+     validate(): string[] {
+          const errors: string[] = [];
+
+          if (!this.firstName || this.firstName.trim().length === 0) {
+               errors.push('First name is required');
+          }
+
+          if (this.firstName && this.firstName.length > 100) {
+               errors.push('First name cannot exceed 100 characters');
+          }
+
+          if (!this.lastName || this.lastName.trim().length === 0) {
+               errors.push('Last name is required');
+          }
+
+          if (this.lastName && this.lastName.length > 100) {
+               errors.push('Last name cannot exceed 100 characters');
+          }
+
+          if (!this.semester || this.semester.trim().length === 0) {
+               errors.push('Semester is required');
+          }
+
+          return errors;
+     }
+
+     static async findAll(): Promise<Member[]> {
+          const supabase = getSupabase();
+
+          const { data, error } = await supabase
+               .from('members')
+               .select('*')
+               .order('last_name', { ascending: true })
+               .order('first_name', { ascending: true });
+
+          if (error) {
+               throw new Error(`Failed to fetch members: ${error.message}`);
+          }
+
+          return (data as MemberRow[]).map(row => Member.fromDatabase(row)!);
+     }
+
+     static async create(memberData: Omit<MemberRow, 'id'>): Promise<Member | null> {
+          const member = new Member({ id: '', ...memberData });
+          const errors = member.validate();
+
+          if (errors.length > 0) {
+               throw new Error(`Validation failed: ${errors.join(', ')}`);
+          }
+
+          const supabase = getSupabase();
+
+          // Verify the semester exists
+          const { data: semesterData, error: semesterError } = await supabase
+               .from('semesters')
+               .select('semester_name')
+               .eq('semester_name', memberData.semester)
+               .single();
+
+          if (semesterError || !semesterData) {
+               throw new Error(`Invalid semester: '${memberData.semester}' does not exist. Please provide a valid semester name.`);
+          }
+
+          const { data, error } = await supabase
+               .from('members')
+               .insert({
+                    first_name: memberData.first_name,
+                    last_name: memberData.last_name,
+                    semester: memberData.semester,
+               })
+               .select()
+               .single();
+
+          if (error) {
+               throw new Error(`Failed to create member: ${error.message}`);
+          }
+
+          return Member.fromDatabase(data as MemberRow);
+     }
+}
+
+export default Member;

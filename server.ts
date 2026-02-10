@@ -11,7 +11,7 @@ import { initializeEmailTransporter } from './config/email.js';
 import { initializeMailchimp, testMailchimpConnection } from './config/mailchimp.js';
 import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 
-import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes } from './routes/index.js';
+import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes, membersRoutes, semestersRoutes } from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
 
@@ -150,6 +150,8 @@ app.use('/v1/board-members', boardMembersRoutes);
 app.use('/v1/newsletter-sign-ups', newsletterRoutes);
 app.use('/v1/events', eventsRoutes);
 app.use('/v1/contact', contactRoutes);
+app.use('/v1/members', membersRoutes);
+app.use('/v1/semesters', semestersRoutes);
 
 // API info endpoint
 app.get('/v1', (_req: Request, res: Response): void => {
@@ -165,6 +167,10 @@ app.get('/v1', (_req: Request, res: Response): void => {
       'GET /v1/events/upcoming': 'Get upcoming events',
       'GET /v1/events/:id': 'Get specific event',
       'POST /v1/contact': 'Submit contact form',
+      'GET /v1/members': 'Get all members',
+      'POST /v1/members': 'Create a new member',
+      'GET /v1/semesters': 'Get all semesters',
+      'POST /v1/semesters': 'Create a new semester',
     }
   });
 });

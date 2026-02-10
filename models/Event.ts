@@ -10,14 +10,15 @@ class Event {
   createdAt: string;
   updatedAt: string;
   title: string;
-  company: string | null;
+  company: string;
   startTime: string;
-  endTime: string | null;
-  location: string | null;
+  endTime: string;
+  location: string;
   flyerFile: string | null;
   rsvpLink: string | null;
   description: string | null;
   isVisible: boolean;
+  semester: string;
 
   constructor(data: EventRow) {
     this.id = data.id;
@@ -32,6 +33,7 @@ class Event {
     this.rsvpLink = data.rsvp_link;
     this.description = data.description;
     this.isVisible = data.is_visible;
+    this.semester = data.semester;
   }
 
   static fromDatabase(row: EventRow | null): Event | null {
@@ -52,6 +54,7 @@ class Event {
       flyerFile: apiEvent.flyer_file,
       rsvpLink: apiEvent.rsvp_link,
       description: apiEvent.description,
+      semester: apiEvent.semester,
     };
   }
 
@@ -68,7 +71,8 @@ class Event {
       flyer_file: this.flyerFile,
       rsvp_link: this.rsvpLink,
       description: this.description,
-      is_visible: this.isVisible
+      is_visible: this.isVisible,
+      semester: this.semester,
     };
   }
 
