@@ -58,16 +58,52 @@ router.post('/', [
 ] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request, res: Response) => {
      const { firstName, lastName, semester } = req.body;
 
-     const member = await Member.create({
-          first_name: firstName,
-          last_name: lastName,
-          semester: semester,
-     });
+     try {
+          const member = await Member.create({
+               first_name: firstName,
+               last_name: lastName,
+               semester: semester,
+          });
 
-     res.status(201).json({
-          success: true,
-          data: member ? Member.toJSON(member.toDatabase()) : null
-     });
+          res.status(201).json({
+               success: true,
+               data: member ? Member.toJSON(member.toDatabase()) : null
+          });
+     } catch (error: unknown) {
+          const err: any = error;
+
+          // Detect known validation/constraint errors related to the `semester` field
+          const isForeignKeySemesterError =
+               err &&
+               typeof err === 'object' &&
+               err.name === 'SequelizeForeignKeyConstraintError' &&
+               (
+                    (Array.isArray(err.fields) && err.fields.includes('semester')) ||
+                    (typeof err.fields === 'string' && err.fields === 'semester') ||
+                    (typeof err.index === 'string' && err.index.includes('semester'))
+               );
+
+          const isValidationSemesterError =
+               err &&
+               typeof err === 'object' &&
+               err.name === 'SequelizeValidationError' &&
+               typeof err.message === 'string' &&
+               err.message.toLowerCase().includes('semester');
+
+          if (isForeignKeySemesterError || isValidationSemesterError) {
+               res.status(400).json({
+                    success: false,
+                    error: {
+                         message: 'Invalid semester',
+                         code: 'INVALID_SEMESTER'
+                    }
+               });
+               return;
+          }
+
+          // Re-throw unexpected errors to be handled by the global error handler
+          throw error;
+     }
 }));
 
 export default router;
