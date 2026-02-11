@@ -13,7 +13,9 @@
     "seed:clear": "tsx scripts/seed.ts clear",
     "test": "jest",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "keywords": [
     "express",
@@ -40,16 +42,20 @@
     "resend": "^6.9.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/mailchimp__mailchimp_marketing": "^3.0.22",
     "@types/node": "^25.0.9",
     "eslint": "^9.0.0",
-    "nodemon": "^3.0.2",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.3.0",
+    "prettier": "^3.8.1",
     "supertest": "^7.1.3",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.55.0"
   },
   "engines": {
     "node": ">=22.x"
