@@ -64,23 +64,11 @@ router.post('/', [
                success: true,
                data: semester ? Semester.toJSON(semester.toDatabase()) : null
           });
-     } catch (err: any) {
-          const name: string | undefined = err?.name;
-          const code: string | number | undefined = err?.code;
-          const message: string = typeof err?.message === 'string' ? err.message : '';
+     } catch (error: unknown) {
+          const message = error instanceof Error ? error.message : '';
 
-          const isDuplicateError =
-               code === 'ER_DUP_ENTRY' ||
-               code === 'SQLITE_CONSTRAINT' ||
-               (typeof code === 'number' && code === 11000) || // common Mongo duplicate
-               (typeof name === 'string' && name.includes('Unique') && name.includes('Constraint')) ||
-               /duplicate/i.test(message);
-
-          const isValidationError =
-               (typeof name === 'string' && name.toLowerCase().includes('validation')) ||
-               /validation/i.test(message);
-
-          if (isDuplicateError) {
+          // The model throws "Semester '...' already exists." for duplicates
+          if (message.includes('already exists')) {
                res.status(409).json({
                     success: false,
                     error: {
@@ -91,20 +79,20 @@ router.post('/', [
                return;
           }
 
-          if (isValidationError) {
+          // The model throws "Validation failed: ..." for input validation errors
+          if (message.startsWith('Validation failed')) {
                res.status(400).json({
                     success: false,
                     error: {
                          message: 'Semester validation failed',
-                         code: 'SEMESTER_VALIDATION_ERROR',
-                         details: message || undefined
+                         code: 'SEMESTER_VALIDATION_ERROR'
                     }
                });
                return;
           }
 
           // Re-throw unexpected errors to be handled by the global error handler
-          throw err;
+          throw error;
      }
 }));
 

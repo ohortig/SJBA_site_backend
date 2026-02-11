@@ -70,32 +70,27 @@ router.post('/', [
                data: member ? Member.toJSON(member.toDatabase()) : null
           });
      } catch (error: unknown) {
-          const err: any = error;
+          const message = error instanceof Error ? error.message : '';
 
-          // Detect known validation/constraint errors related to the `semester` field
-          const isForeignKeySemesterError =
-               err &&
-               typeof err === 'object' &&
-               err.name === 'SequelizeForeignKeyConstraintError' &&
-               (
-                    (Array.isArray(err.fields) && err.fields.includes('semester')) ||
-                    (typeof err.fields === 'string' && err.fields === 'semester') ||
-                    (typeof err.index === 'string' && err.index.includes('semester'))
-               );
-
-          const isValidationSemesterError =
-               err &&
-               typeof err === 'object' &&
-               err.name === 'SequelizeValidationError' &&
-               typeof err.message === 'string' &&
-               err.message.toLowerCase().includes('semester');
-
-          if (isForeignKeySemesterError || isValidationSemesterError) {
+          // The model throws "Invalid semester: ..." when the semester doesn't exist
+          if (message.startsWith('Invalid semester')) {
                res.status(400).json({
                     success: false,
                     error: {
                          message: 'Invalid semester',
                          code: 'INVALID_SEMESTER'
+                    }
+               });
+               return;
+          }
+
+          // The model throws "Validation failed: ..." for input validation errors
+          if (message.startsWith('Validation failed')) {
+               res.status(400).json({
+                    success: false,
+                    error: {
+                         message: 'Member validation failed',
+                         code: 'MEMBER_VALIDATION_ERROR'
                     }
                });
                return;

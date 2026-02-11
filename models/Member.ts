@@ -112,6 +112,7 @@ class Member {
           if (!semesterData) {
                throw new Error(`Failed to verify semester '${memberData.semester}': lookup returned no data without an error.`);
           }
+
           const { data, error } = await supabase
                .from('members')
                .insert({
