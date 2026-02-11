@@ -4,167 +4,167 @@ import type { ContactSubmissionRow } from '../types/index.js';
 import { logger } from '../logger.js';
 
 class ContactForm {
-     id: string | undefined;
-     firstName: string;
-     lastName: string;
-     email: string;
-     company: string | null;
-     message: string;
-     createdAt: string;
+  id: string | undefined;
+  firstName: string;
+  lastName: string;
+  email: string;
+  company: string | null;
+  message: string;
+  createdAt: string;
 
-     constructor(data: ContactSubmissionRow) {
-          this.id = data.id;
-          this.firstName = data.first_name;
-          this.lastName = data.last_name;
-          this.email = data.email;
-          this.company = data.company;
-          this.message = data.message;
-          this.createdAt = data.created_at;
-     }
+  constructor(data: ContactSubmissionRow) {
+    this.id = data.id;
+    this.firstName = data.first_name;
+    this.lastName = data.last_name;
+    this.email = data.email;
+    this.company = data.company;
+    this.message = data.message;
+    this.createdAt = data.created_at;
+  }
 
-     // Convert database row to model instance
-     static fromDatabase(row: ContactSubmissionRow | null): ContactForm | null {
-          if (!row) return null;
-          return new ContactForm(row);
-     }
+  // Convert database row to model instance
+  static fromDatabase(row: ContactSubmissionRow | null): ContactForm | null {
+    if (!row) return null;
+    return new ContactForm(row);
+  }
 
-     // Convert model instance to database format (snake_case)
-     toDatabase(): Omit<ContactSubmissionRow, 'id'> {
-          return {
-               first_name: this.firstName,
-               last_name: this.lastName,
-               email: this.email,
-               company: this.company,
-               message: this.message,
-               created_at: this.createdAt
-          };
-     }
+  // Convert model instance to database format (snake_case)
+  toDatabase(): Omit<ContactSubmissionRow, 'id'> {
+    return {
+      first_name: this.firstName,
+      last_name: this.lastName,
+      email: this.email,
+      company: this.company,
+      message: this.message,
+      created_at: this.createdAt,
+    };
+  }
 
-     // Convert to JSON response format (camelCase)
-     static toJSON(row: ContactSubmissionRow) {
-          return {
-               id: row.id,
-               firstName: row.first_name,
-               lastName: row.last_name,
-               email: row.email,
-               company: row.company,
-               message: row.message,
-               createdAt: row.created_at
-          };
-     }
+  // Convert to JSON response format (camelCase)
+  static toJSON(row: ContactSubmissionRow) {
+    return {
+      id: row.id,
+      firstName: row.first_name,
+      lastName: row.last_name,
+      email: row.email,
+      company: row.company,
+      message: row.message,
+      createdAt: row.created_at,
+    };
+  }
 
-     // Validation
-     validate(): string[] {
-          const errors: string[] = [];
+  // Validation
+  validate(): string[] {
+    const errors: string[] = [];
 
-          if (!this.firstName || this.firstName.trim().length === 0) {
-               errors.push('First name is required');
-          }
+    if (!this.firstName || this.firstName.trim().length === 0) {
+      errors.push('First name is required');
+    }
 
-          if (!this.lastName || this.lastName.trim().length === 0) {
-               errors.push('Last name is required');
-          }
+    if (!this.lastName || this.lastName.trim().length === 0) {
+      errors.push('Last name is required');
+    }
 
-          if (!this.email || this.email.trim().length === 0) {
-               errors.push('Email is required');
-          }
+    if (!this.email || this.email.trim().length === 0) {
+      errors.push('Email is required');
+    }
 
-          if (this.email) {
-               const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-               if (!emailRegex.test(this.email.toLowerCase())) {
-                    errors.push('Please enter a valid email');
-               }
-          }
+    if (this.email) {
+      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+      if (!emailRegex.test(this.email.toLowerCase())) {
+        errors.push('Please enter a valid email');
+      }
+    }
 
-          if (!this.message || this.message.trim().length === 0) {
-               errors.push('Message is required');
-          }
+    if (!this.message || this.message.trim().length === 0) {
+      errors.push('Message is required');
+    }
 
-          if (this.firstName && this.firstName.length > 100) {
-               errors.push('First name cannot exceed 100 characters');
-          }
+    if (this.firstName && this.firstName.length > 100) {
+      errors.push('First name cannot exceed 100 characters');
+    }
 
-          if (this.lastName && this.lastName.length > 100) {
-               errors.push('Last name cannot exceed 100 characters');
-          }
+    if (this.lastName && this.lastName.length > 100) {
+      errors.push('Last name cannot exceed 100 characters');
+    }
 
-          if (this.company && this.company.length > 255) {
-               errors.push('Company cannot exceed 255 characters');
-          }
+    if (this.company && this.company.length > 255) {
+      errors.push('Company cannot exceed 255 characters');
+    }
 
-          if (this.message && this.message.length > 5000) {
-               errors.push('Message cannot exceed 5000 characters');
-          }
+    if (this.message && this.message.length > 5000) {
+      errors.push('Message cannot exceed 5000 characters');
+    }
 
-          return errors;
-     }
+    return errors;
+  }
 
-     static async create(formData: {
-          first_name: string;
-          last_name: string;
-          email: string;
-          company: string | null;
-          message: string;
-     }): Promise<ContactForm | null> {
-          // Create a temporary row object for the constructor
-          const tempRow: ContactSubmissionRow = {
-               id: '',
-               first_name: formData.first_name,
-               last_name: formData.last_name,
-               email: formData.email,
-               company: formData.company,
-               message: formData.message,
-               created_at: new Date().toISOString()
-          };
+  static async create(formData: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    company: string | null;
+    message: string;
+  }): Promise<ContactForm | null> {
+    // Create a temporary row object for the constructor
+    const tempRow: ContactSubmissionRow = {
+      id: '',
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      email: formData.email,
+      company: formData.company,
+      message: formData.message,
+      created_at: new Date().toISOString(),
+    };
 
-          const form = new ContactForm(tempRow);
+    const form = new ContactForm(tempRow);
 
-          // Normalize email
-          if (form.email) {
-               form.email = form.email.toLowerCase().trim();
-          }
+    // Normalize email
+    if (form.email) {
+      form.email = form.email.toLowerCase().trim();
+    }
 
-          // Validate
-          const errors = form.validate();
-          if (errors.length > 0) {
-               throw new Error(`Validation failed: ${errors.join(', ')}`);
-          }
+    // Validate
+    const errors = form.validate();
+    if (errors.length > 0) {
+      throw new Error(`Validation failed: ${errors.join(', ')}`);
+    }
 
-          const supabase = getSupabase();
+    const supabase = getSupabase();
 
-          const { data, error } = await supabase
-               .from('contact_requests')
-               .insert(form.toDatabase())
-               .select()
-               .single();
+    const { data, error } = await supabase
+      .from('contact_requests')
+      .insert(form.toDatabase())
+      .select()
+      .single();
 
-          if (error) {
-               throw new Error(`Failed to create contact submission: ${error.message}`);
-          }
+    if (error) {
+      throw new Error(`Failed to create contact submission: ${error.message}`);
+    }
 
-          return ContactForm.fromDatabase(data as ContactSubmissionRow);
-     }
+    return ContactForm.fromDatabase(data as ContactSubmissionRow);
+  }
 
-     /**
-      * Send notification email about a contact form submission
-      */
-     async sendNotificationEmail(): Promise<boolean> {
-          if (!isEmailEnabled()) {
-               logger.warn({ message: 'Email not configured - skipping notification' });
-               return false;
-          }
+  /**
+   * Send notification email about a contact form submission
+   */
+  async sendNotificationEmail(): Promise<boolean> {
+    if (!isEmailEnabled()) {
+      logger.warn({ message: 'Email not configured - skipping notification' });
+      return false;
+    }
 
-          const recipientEmail = process.env.CONTACT_NOTIFICATION_EMAIL || 'sjba@stern.nyu.edu';
+    const recipientEmail = process.env.CONTACT_NOTIFICATION_EMAIL || 'sjba@stern.nyu.edu';
 
-          const subject = `Contact Form Submission from ${this.firstName} ${this.lastName}`;
+    const subject = `Contact Form Submission from ${this.firstName} ${this.lastName}`;
 
-          const submittedAt = new Date(this.createdAt).toLocaleString('en-US', {
-               timeZone: 'America/New_York',
-               dateStyle: 'full',
-               timeStyle: 'long'
-          });
+    const submittedAt = new Date(this.createdAt).toLocaleString('en-US', {
+      timeZone: 'America/New_York',
+      dateStyle: 'full',
+      timeStyle: 'long',
+    });
 
-          const text = `
+    const text = `
 New Contact Form Submission
 
 Name: ${this.firstName} ${this.lastName}
@@ -178,7 +178,7 @@ ${this.message}
 Submitted at: ${submittedAt}
     `.trim();
 
-          const html = `
+    const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -221,13 +221,13 @@ Submitted at: ${submittedAt}
 </html>
     `.trim();
 
-          return sendEmail({
-               to: recipientEmail,
-               subject,
-               text,
-               html
-          });
-     }
+    return sendEmail({
+      to: recipientEmail,
+      subject,
+      text,
+      html,
+    });
+  }
 }
 
 export default ContactForm;

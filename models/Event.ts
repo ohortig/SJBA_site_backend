@@ -1,23 +1,20 @@
 import { getSupabase } from '../config/supabase.js';
-import type {
-  EventRow,
-  EventsQueryParams,
-  EventPaginatedResult
-} from '../types/index.js';
+import type { EventRow, EventsQueryParams, EventPaginatedResult } from '../types/index.js';
 
 class Event {
   id: string;
   createdAt: string;
   updatedAt: string;
   title: string;
-  company: string | null;
+  company: string;
   startTime: string;
-  endTime: string | null;
-  location: string | null;
+  endTime: string;
+  location: string;
   flyerFile: string | null;
   rsvpLink: string | null;
   description: string | null;
   isVisible: boolean;
+  semester: string;
 
   constructor(data: EventRow) {
     this.id = data.id;
@@ -32,6 +29,7 @@ class Event {
     this.rsvpLink = data.rsvp_link;
     this.description = data.description;
     this.isVisible = data.is_visible;
+    this.semester = data.semester;
   }
 
   static fromDatabase(row: EventRow | null): Event | null {
@@ -52,6 +50,7 @@ class Event {
       flyerFile: apiEvent.flyer_file,
       rsvpLink: apiEvent.rsvp_link,
       description: apiEvent.description,
+      semester: apiEvent.semester,
     };
   }
 
@@ -68,7 +67,8 @@ class Event {
       flyer_file: this.flyerFile,
       rsvp_link: this.rsvpLink,
       description: this.description,
-      is_visible: this.isVisible
+      is_visible: this.isVisible,
+      semester: this.semester,
     };
   }
 
@@ -77,18 +77,9 @@ class Event {
    */
   static async findAll(options: EventsQueryParams = {}): Promise<EventPaginatedResult<Event>> {
     const supabase = getSupabase();
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      startDate,
-      endDate,
-    } = options;
+    const { page = 1, limit = 10, search, startDate, endDate } = options;
 
-    let query = supabase
-      .from('events')
-      .select('*')
-      .eq('is_visible', true);
+    let query = supabase.from('events').select('*').eq('is_visible', true);
 
     let countQuery = supabase
       .from('events')
@@ -115,9 +106,7 @@ class Event {
 
     const [countResult, eventsResult] = await Promise.all([
       countQuery,
-      query
-        .order('start_time', { ascending: true })
-        .range((page - 1) * limit, page * limit - 1)
+      query.order('start_time', { ascending: true }).range((page - 1) * limit, page * limit - 1),
     ]);
 
     if (countResult.error) {
@@ -129,14 +118,14 @@ class Event {
     }
 
     const total = countResult.count ?? 0;
-    const events = (eventsResult.data as EventRow[]).map(row => Event.fromDatabase(row)!);
+    const events = (eventsResult.data as EventRow[]).map((row) => Event.fromDatabase(row)!);
 
     return {
       events,
       total,
       page,
       limit,
-      totalPages: Math.ceil(total / limit)
+      totalPages: Math.ceil(total / limit),
     };
   }
 
@@ -182,7 +171,7 @@ class Event {
       throw new Error(`Failed to fetch upcoming events: ${error.message}`);
     }
 
-    return (data as EventRow[]).map(row => Event.fromDatabase(row)!);
+    return (data as EventRow[]).map((row) => Event.fromDatabase(row)!);
   }
 }
 

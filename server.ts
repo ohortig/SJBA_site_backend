@@ -11,9 +11,18 @@ import { initializeEmailTransporter } from './config/email.js';
 import { initializeMailchimp, testMailchimpConnection } from './config/mailchimp.js';
 import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 
-import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes } from './routes/index.js';
+import {
+  boardMembersRoutes,
+  newsletterRoutes,
+  eventsRoutes,
+  contactRoutes,
+  membersRoutes,
+  semestersRoutes,
+} from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
 
 dotenv.config();
 
@@ -31,7 +40,7 @@ initializeMailchimp();
 testMailchimpConnection().catch((error: Error) => {
   logger.error({
     message: 'Failed to connect to Mailchimp during startup - will retry on first request',
-    error: error.message
+    error: error.message,
   });
   // Don't exit the process - let the server start and handle errors per-request
 });
@@ -39,12 +48,18 @@ testMailchimpConnection().catch((error: Error) => {
 testConnection().catch((error: Error) => {
   logger.error({
     message: 'Failed to connect to Supabase during startup - will retry on first request',
-    error: error.message
+    error: error.message,
   });
   // Don't exit the process - let the server start and handle errors per-request
 });
 
 // Note: Security headers are configured in vercel.json for edge-level performance
+
+// API Documentation (before rate limiter so docs are freely accessible)
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/docs.json', (_req: Request, res: Response): void => {
+  res.json(swaggerSpec);
+});
 
 // Rate limiting
 const limiter = rateLimit({
@@ -52,13 +67,13 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   message: {
     error: 'Too many requests from this IP, please try again later.',
-    code: 'RATE_LIMIT_EXCEEDED'
+    code: 'RATE_LIMIT_EXCEEDED',
   },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
-app.use('/api', limiter);
+app.use('/v1', limiter);
 
 // CORS configuration
 interface CorsCallback {
@@ -73,17 +88,15 @@ const corsOptions: cors.CorsOptions = {
       return;
     }
 
-    const allowedOrigins: string[] = [
-      process.env.FRONTEND_URL,
-    ].filter(Boolean) as string[];
+    const allowedOrigins: string[] = [process.env.FRONTEND_URL].filter(Boolean) as string[];
 
-    if (allowedOrigins.some(allowed => origin.includes(allowed.replace(/^https?:\/\//, '')))) {
+    if (allowedOrigins.some((allowed) => origin.includes(allowed.replace(/^https?:\/\//, '')))) {
       callback(null, true);
     } else {
       logger.warn({
         message: 'CORS blocked request',
         origin: origin,
-        allowedOrigins: allowedOrigins
+        allowedOrigins: allowedOrigins,
       });
       callback(new Error('Not allowed by CORS'));
     }
@@ -97,8 +110,8 @@ const corsOptions: cors.CorsOptions = {
     'Cache-Control',
     'Accept',
     'Accept-Language',
-    'Accept-Encoding'
-  ]
+    'Accept-Encoding',
+  ],
 };
 
 app.use(cors(corsOptions));
@@ -111,7 +124,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // HTTP request logging
 app.use(httpLogger);
 
-app.use('/api', validateReferer);
+app.use('/v1', validateReferer);
 
 // Root route for Vercel health checks and screenshots
 app.get('/', (_req: Request, res: Response): void => {
@@ -122,8 +135,10 @@ app.get('/', (_req: Request, res: Response): void => {
     description: 'Backend API for SJBA website',
     endpoints: {
       health: '/health',
-      api: '/v1'
-    }
+      api: '/v1',
+      docs: '/docs',
+      openapi: '/docs.json',
+    },
   });
 });
 
@@ -132,7 +147,7 @@ app.get('/health', (_req: Request, res: Response): void => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
@@ -150,22 +165,14 @@ app.use('/v1/board-members', boardMembersRoutes);
 app.use('/v1/newsletter-sign-ups', newsletterRoutes);
 app.use('/v1/events', eventsRoutes);
 app.use('/v1/contact', contactRoutes);
+app.use('/v1/members', membersRoutes);
+app.use('/v1/semesters', semestersRoutes);
 
-// API info endpoint
+// API version info endpoint
 app.get('/v1', (_req: Request, res: Response): void => {
   res.json({
-    name: 'SJBA API',
     version: '1.0.0',
-    description: 'Backend API for SJBA website with secure public endpoints',
-    endpoints: {
-      'GET /v1/board-members': 'Get all board members',
-      'GET /v1/board-members/:id': 'Get specific board member',
-      'POST /v1/newsletter-sign-ups': 'Sign up for newsletter',
-      'GET /v1/events': 'Get all events',
-      'GET /v1/events/upcoming': 'Get upcoming events',
-      'GET /v1/events/:id': 'Get specific event',
-      'POST /v1/contact': 'Submit contact form',
-    }
+    documentation: '/docs',
   });
 });
 
@@ -180,26 +187,26 @@ let server: http.Server | undefined;
 // Graceful shutdown
 const gracefulShutdown = (signal: string): void => {
   logger.info({
-    message: `Received ${signal}, shutting down gracefully...`
+    message: `Received ${signal}, shutting down gracefully...`,
   });
   if (server) {
     server.close((err?: Error) => {
       if (err) {
         logger.error({
           message: `Error shutting down server`,
-          error: err
+          error: err,
         });
         process.exit(1);
       }
 
       logger.info({
-        message: 'Server shut down gracefully'
+        message: 'Server shut down gracefully',
       });
       process.exit(0);
     });
   } else {
     logger.info({
-      message: 'No server to close, shutting down gracefully'
+      message: 'No server to close, shutting down gracefully',
     });
     process.exit(0);
   }
@@ -210,16 +217,16 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 process.on('uncaughtException', (err: Error) => {
   logger.error({
-    message: "Uncaught exception",
-    error: err
+    message: 'Uncaught exception',
+    error: err,
   });
   gracefulShutdown('UNCAUGHT_EXCEPTION');
 });
 process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
   logger.error({
-    message: "Unhandled rejection",
+    message: 'Unhandled rejection',
     reason: reason,
-    promise: promise
+    promise: promise,
   });
   gracefulShutdown('UNHANDLED_REJECTION');
 });
@@ -232,7 +239,7 @@ if (process.env.VERCEL !== '1') {
       environment: process.env.NODE_ENV || 'development',
       database: 'Supabase PostgreSQL',
       healthCheck: `http://localhost:${PORT}/health`,
-      apiInfo: `http://localhost:${PORT}/v1`
+      apiInfo: `http://localhost:${PORT}/v1`,
     });
   });
 }

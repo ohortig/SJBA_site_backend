@@ -1,37 +1,37 @@
 export interface NewsletterSignupRow {
-     id: string;
-     email: string;
-     first_name: string;
-     last_name: string;
-     created_at: string;
-     is_active?: boolean;
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  created_at: string;
+  is_active?: boolean;
 }
 
 export interface NewsletterSignupData {
-     id?: string;
-     email?: string;
-     first_name?: string;
-     last_name?: string;
-     created_at?: string;
+  id?: string;
+  email?: string;
+  first_name?: string;
+  last_name?: string;
+  created_at?: string;
 }
 
 export interface NewsletterSignupJSON {
-     id: string | undefined;
-     email: string | undefined;
-     firstName: string | undefined;
-     lastName: string | undefined;
-     createdAt: string;
+  id: string | undefined;
+  email: string | undefined;
+  firstName: string | undefined;
+  lastName: string | undefined;
+  createdAt: string;
 }
 
 export interface NewsletterFindAllOptions {
-     active?: boolean;
-     page?: number;
-     limit?: number;
-     orderBy?: string;
-     orderDirection?: 'asc' | 'desc';
+  active?: boolean;
+  page?: number;
+  limit?: number;
+  orderBy?: string;
+  orderDirection?: 'asc' | 'desc';
 }
 
 export interface NewsletterStats {
-     total: number | null;
-     recentSignups: number | null;
+  total: number | null;
+  recentSignups: number | null;
 }
