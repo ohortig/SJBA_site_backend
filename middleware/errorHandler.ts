@@ -12,18 +12,15 @@ interface ErrorResponse {
   code?: string;
 }
 
-const errorHandler = (
-  err: AppError,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-): void => {
+// Express error handlers must have 4 parameters for Express to recognize them
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const errorHandler = (err: AppError, req: Request, res: Response, _next: NextFunction): void => {
   let error: ErrorResponse = { message: err.message };
 
   // Log error
   logger.error({
     message: `Error: ${err.message}`,
-    error: err
+    error: err,
   });
 
   // CORS error
@@ -31,7 +28,7 @@ const errorHandler = (
     error = {
       message: 'CORS policy violation',
       status: 403,
-      code: 'CORS_ERROR'
+      code: 'CORS_ERROR',
     };
   }
 
@@ -40,7 +37,7 @@ const errorHandler = (
     error = {
       message: 'Rate limit exceeded',
       status: 429,
-      code: 'RATE_LIMIT_EXCEEDED'
+      code: 'RATE_LIMIT_EXCEEDED',
     };
   }
 
@@ -49,26 +46,19 @@ const errorHandler = (
     error: {
       message: error.message || 'Server Error',
       code: error.code || 'INTERNAL_SERVER_ERROR',
-      reqBody: req.body
-    }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      reqBody: req.body,
+    },
   });
 };
 
-const notFound = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+const notFound = (req: Request, res: Response, next: NextFunction): void => {
   const error = new Error(`Not found - ${req.originalUrl}`);
   res.status(404);
   next(error);
 };
 
-type AsyncHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => Promise<unknown>;
+type AsyncHandler = (req: Request, res: Response, next: NextFunction) => Promise<unknown>;
 
 const asyncHandler = (fn: AsyncHandler): RequestHandler => {
   return (req: Request, res: Response, next: NextFunction): void => {

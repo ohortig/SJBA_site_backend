@@ -61,7 +61,7 @@ class BoardMember {
       linkedin_url: this.linkedinUrl,
       email: this.email,
       headshot_file: this.headshotFile,
-      order_index: this.orderIndex
+      order_index: this.orderIndex,
     };
   }
 
@@ -112,17 +112,13 @@ class BoardMember {
       throw new Error(`Failed to fetch board members: ${error.message}`);
     }
 
-    return (data as BoardMemberRow[]).map(row => BoardMember.fromDatabase(row)!);
+    return (data as BoardMemberRow[]).map((row) => BoardMember.fromDatabase(row)!);
   }
 
   static async findById(id: string): Promise<BoardMember | null> {
     const supabase = getSupabase();
 
-    const { data, error } = await supabase
-      .from('board_members')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await supabase.from('board_members').select('*').eq('id', id).single();
 
     if (error) {
       throw new Error(`Failed to fetch board member: ${error.message}`);
@@ -210,10 +206,7 @@ class BoardMember {
 
     const supabase = getSupabase();
 
-    const { error } = await supabase
-      .from('board_members')
-      .delete()
-      .eq('id', this.id);
+    const { error } = await supabase.from('board_members').delete().eq('id', this.id);
 
     if (error) {
       throw new Error(`Failed to delete board member: ${error.message}`);

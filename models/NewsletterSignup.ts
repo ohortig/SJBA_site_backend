@@ -4,7 +4,7 @@ import type {
   NewsletterSignupData,
   NewsletterSignupJSON,
   NewsletterFindAllOptions,
-  NewsletterStats
+  NewsletterStats,
 } from '../types/index.js';
 
 class NewsletterSignup {
@@ -34,7 +34,7 @@ class NewsletterSignup {
       email: this.email,
       first_name: this.firstName,
       last_name: this.lastName,
-      created_at: this.createdAt
+      created_at: this.createdAt,
     };
   }
 
@@ -44,7 +44,7 @@ class NewsletterSignup {
       email: this.email,
       firstName: this.firstName,
       lastName: this.lastName,
-      createdAt: this.createdAt
+      createdAt: this.createdAt,
     };
   }
 
@@ -62,12 +62,11 @@ class NewsletterSignup {
         errors.push('Please enter a valid email');
       }
 
-      const nyuEmailPatterns = [
-        /@nyu\.edu$/i,
-        /@.*\.nyu\.edu$/i
-      ];
+      const nyuEmailPatterns = [/@nyu\.edu$/i, /@.*\.nyu\.edu$/i];
 
-      const isNyuEmail = nyuEmailPatterns.some(pattern => pattern.test(this.email!.toLowerCase()));
+      const isNyuEmail = nyuEmailPatterns.some((pattern) =>
+        pattern.test(this.email!.toLowerCase())
+      );
 
       if (!isNyuEmail) {
         errors.push('Please use your NYU email address');
@@ -154,7 +153,8 @@ class NewsletterSignup {
       .single();
 
     if (error) {
-      if (error.code === '23505') { // Unique constraint violation
+      if (error.code === '23505') {
+        // Unique constraint violation
         throw new Error('Email is already subscribed to the newsletter');
       }
       throw new Error(`Failed to create newsletter signup: ${error.message}`);
@@ -204,7 +204,8 @@ class NewsletterSignup {
         .single();
 
       if (error) {
-        if (error.code === '23505') { // Unique constraint violation
+        if (error.code === '23505') {
+          // Unique constraint violation
           throw new Error('Email is already subscribed to the newsletter');
         }
         throw new Error(`Failed to create newsletter signup: ${error.message}`);
@@ -227,12 +228,10 @@ class NewsletterSignup {
       page = 1,
       limit = 50,
       orderBy = 'created_at',
-      orderDirection = 'desc'
+      orderDirection = 'desc',
     } = options;
 
-    let query = supabase
-      .from('newsletter_signups')
-      .select('*');
+    let query = supabase.from('newsletter_signups').select('*');
 
     if (active !== undefined) {
       query = query.eq('is_active', active);
@@ -250,7 +249,7 @@ class NewsletterSignup {
       throw new Error(`Failed to fetch newsletter signups: ${error.message}`);
     }
 
-    return (data as NewsletterSignupRow[]).map(row => NewsletterSignup.fromDatabase(row)!);
+    return (data as NewsletterSignupRow[]).map((row) => NewsletterSignup.fromDatabase(row)!);
   }
 
   static async count(): Promise<number> {

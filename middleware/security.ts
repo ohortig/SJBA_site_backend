@@ -1,10 +1,6 @@
 import type { Request, Response, NextFunction, RequestHandler } from 'express';
 
-const validateReferer: RequestHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
+const validateReferer: RequestHandler = (req: Request, res: Response, next: NextFunction): void => {
   // Skip referer validation for development
   if (process.env.NODE_ENV === 'development') {
     next();
@@ -19,9 +15,7 @@ const validateReferer: RequestHandler = (
     return;
   }
 
-  const allowedDomains = [
-    process.env.FRONTEND_URL,
-  ].filter(Boolean) as string[];
+  const allowedDomains = [process.env.FRONTEND_URL].filter(Boolean) as string[];
 
   // If no allowed domains are configured, allow all requests
   if (allowedDomains.length === 0) {
@@ -29,7 +23,7 @@ const validateReferer: RequestHandler = (
     return;
   }
 
-  const isAllowed = allowedDomains.some(domain => {
+  const isAllowed = allowedDomains.some((domain) => {
     return referer.includes(domain);
   });
 
@@ -38,8 +32,8 @@ const validateReferer: RequestHandler = (
       success: false,
       error: {
         message: 'Forbidden - Invalid referer',
-        code: 'INVALID_REFERER'
-      }
+        code: 'INVALID_REFERER',
+      },
     });
     return;
   }
@@ -47,17 +41,20 @@ const validateReferer: RequestHandler = (
   next();
 };
 
-type SanitizedValue = string | number | boolean | null | undefined | SanitizedObject | SanitizedValue[];
+type SanitizedValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | SanitizedObject
+  | SanitizedValue[];
 
 interface SanitizedObject {
   [key: string]: SanitizedValue;
 }
 
-const validateInput: RequestHandler = (
-  req: Request,
-  _res: Response,
-  next: NextFunction
-): void => {
+const validateInput: RequestHandler = (req: Request, _res: Response, next: NextFunction): void => {
   const sanitizeString = (str: string): string => {
     return str.trim().replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
   };

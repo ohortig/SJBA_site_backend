@@ -18,7 +18,7 @@ interface LoggerConfig {
 
 // Configure logger based on environment
 const loggerConfig: LoggerConfig = {
-  level: 'info'
+  level: 'info',
 };
 
 // Use pino-pretty unless in production
@@ -30,8 +30,8 @@ if (process.env.NODE_ENV !== 'production') {
       singleLine: true,
       translateTime: 'HH:MM:ss',
       ignore: 'pid,hostname',
-      messageKey: 'message'
-    }
+      messageKey: 'message',
+    },
   };
 }
 
@@ -42,6 +42,6 @@ export const logger = pino(loggerConfig);
 export const httpLogger = (pinoHttp as unknown as typeof pinoHttp.default)({
   logger,
   autoLogging: {
-    ignore: (req: { url?: string }) => req.url === '/health' || req.url === '/favicon.ico'
-  }
+    ignore: (req: { url?: string }) => req.url === '/health' || req.url === '/favicon.ico',
+  },
 });

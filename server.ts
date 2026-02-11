@@ -11,7 +11,14 @@ import { initializeEmailTransporter } from './config/email.js';
 import { initializeMailchimp, testMailchimpConnection } from './config/mailchimp.js';
 import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 
-import { boardMembersRoutes, newsletterRoutes, eventsRoutes, contactRoutes, membersRoutes, semestersRoutes } from './routes/index.js';
+import {
+  boardMembersRoutes,
+  newsletterRoutes,
+  eventsRoutes,
+  contactRoutes,
+  membersRoutes,
+  semestersRoutes,
+} from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
 
@@ -31,7 +38,7 @@ initializeMailchimp();
 testMailchimpConnection().catch((error: Error) => {
   logger.error({
     message: 'Failed to connect to Mailchimp during startup - will retry on first request',
-    error: error.message
+    error: error.message,
   });
   // Don't exit the process - let the server start and handle errors per-request
 });
@@ -39,7 +46,7 @@ testMailchimpConnection().catch((error: Error) => {
 testConnection().catch((error: Error) => {
   logger.error({
     message: 'Failed to connect to Supabase during startup - will retry on first request',
-    error: error.message
+    error: error.message,
   });
   // Don't exit the process - let the server start and handle errors per-request
 });
@@ -52,7 +59,7 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   message: {
     error: 'Too many requests from this IP, please try again later.',
-    code: 'RATE_LIMIT_EXCEEDED'
+    code: 'RATE_LIMIT_EXCEEDED',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -73,17 +80,15 @@ const corsOptions: cors.CorsOptions = {
       return;
     }
 
-    const allowedOrigins: string[] = [
-      process.env.FRONTEND_URL,
-    ].filter(Boolean) as string[];
+    const allowedOrigins: string[] = [process.env.FRONTEND_URL].filter(Boolean) as string[];
 
-    if (allowedOrigins.some(allowed => origin.includes(allowed.replace(/^https?:\/\//, '')))) {
+    if (allowedOrigins.some((allowed) => origin.includes(allowed.replace(/^https?:\/\//, '')))) {
       callback(null, true);
     } else {
       logger.warn({
         message: 'CORS blocked request',
         origin: origin,
-        allowedOrigins: allowedOrigins
+        allowedOrigins: allowedOrigins,
       });
       callback(new Error('Not allowed by CORS'));
     }
@@ -97,8 +102,8 @@ const corsOptions: cors.CorsOptions = {
     'Cache-Control',
     'Accept',
     'Accept-Language',
-    'Accept-Encoding'
-  ]
+    'Accept-Encoding',
+  ],
 };
 
 app.use(cors(corsOptions));
@@ -122,8 +127,8 @@ app.get('/', (_req: Request, res: Response): void => {
     description: 'Backend API for SJBA website',
     endpoints: {
       health: '/health',
-      api: '/v1'
-    }
+      api: '/v1',
+    },
   });
 });
 
@@ -132,7 +137,7 @@ app.get('/health', (_req: Request, res: Response): void => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
@@ -171,7 +176,7 @@ app.get('/v1', (_req: Request, res: Response): void => {
       'POST /v1/members': 'Create a new member',
       'GET /v1/semesters': 'Get all semesters',
       'POST /v1/semesters': 'Create a new semester',
-    }
+    },
   });
 });
 
@@ -186,26 +191,26 @@ let server: http.Server | undefined;
 // Graceful shutdown
 const gracefulShutdown = (signal: string): void => {
   logger.info({
-    message: `Received ${signal}, shutting down gracefully...`
+    message: `Received ${signal}, shutting down gracefully...`,
   });
   if (server) {
     server.close((err?: Error) => {
       if (err) {
         logger.error({
           message: `Error shutting down server`,
-          error: err
+          error: err,
         });
         process.exit(1);
       }
 
       logger.info({
-        message: 'Server shut down gracefully'
+        message: 'Server shut down gracefully',
       });
       process.exit(0);
     });
   } else {
     logger.info({
-      message: 'No server to close, shutting down gracefully'
+      message: 'No server to close, shutting down gracefully',
     });
     process.exit(0);
   }
@@ -216,16 +221,16 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 process.on('uncaughtException', (err: Error) => {
   logger.error({
-    message: "Uncaught exception",
-    error: err
+    message: 'Uncaught exception',
+    error: err,
   });
   gracefulShutdown('UNCAUGHT_EXCEPTION');
 });
 process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
   logger.error({
-    message: "Unhandled rejection",
+    message: 'Unhandled rejection',
     reason: reason,
-    promise: promise
+    promise: promise,
   });
   gracefulShutdown('UNHANDLED_REJECTION');
 });
@@ -238,7 +243,7 @@ if (process.env.VERCEL !== '1') {
       environment: process.env.NODE_ENV || 'development',
       database: 'Supabase PostgreSQL',
       healthCheck: `http://localhost:${PORT}/health`,
-      apiInfo: `http://localhost:${PORT}/v1`
+      apiInfo: `http://localhost:${PORT}/v1`,
     });
   });
 }
