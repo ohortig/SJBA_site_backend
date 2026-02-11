@@ -96,10 +96,22 @@ class Member {
                .eq('semester_name', memberData.semester)
                .single();
 
-          if (semesterError || !semesterData) {
-               throw new Error(`Invalid semester: '${memberData.semester}' does not exist. Please provide a valid semester name.`);
+          if (semesterError) {
+               // PGRST116: no rows returned - treat as "semester does not exist"
+               if ((semesterError as { code?: string }).code === 'PGRST116') {
+                    throw new Error(
+                         `Invalid semester: '${memberData.semester}' does not exist. Please provide a valid semester name.`
+                    );
+               }
+
+               // Any other error means we failed to verify the semester, not that it is invalid
+               throw new Error(`Failed to verify semester '${memberData.semester}': ${semesterError.message}`);
           }
 
+          // No error but no data is an unexpected state; treat as verification failure
+          if (!semesterData) {
+               throw new Error(`Failed to verify semester '${memberData.semester}': lookup returned no data without an error.`);
+          }
           const { data, error } = await supabase
                .from('members')
                .insert({
