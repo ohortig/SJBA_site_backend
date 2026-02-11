@@ -121,6 +121,9 @@ class BoardMember {
     const { data, error } = await supabase.from('board_members').select('*').eq('id', id).single();
 
     if (error) {
+      if (error.code === 'PGRST116') {
+        return null;
+      }
       throw new Error(`Failed to fetch board member: ${error.message}`);
     }
 
