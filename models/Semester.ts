@@ -69,12 +69,16 @@ class Semester {
           const supabase = getSupabase();
 
           // Check if semester already exists
-          const { data: existing } = await supabase
+          const { data: existing, error: existingError } = await supabase
                .from('semesters')
                .select('semester_name')
                .eq('semester_name', semesterData.semester_name)
                .single();
 
+          // PGRST116 is the "Results contain 0 rows" / not-found case; treat other errors as failures.
+          if (existingError && existingError.code !== 'PGRST116') {
+               throw new Error(`Failed to check existing semester: ${existingError.message}`);
+          }
           if (existing) {
                throw new Error(`Semester '${semesterData.semester_name}' already exists.`);
           }
