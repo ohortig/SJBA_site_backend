@@ -105,7 +105,10 @@ router.post(
     // Send notification email - must await in serverless environment
     // to ensure email completes before function context is frozen
     try {
-      await contactSubmission.sendNotificationEmail();
+      const emailSent = await contactSubmission.sendNotificationEmail();
+      if (!emailSent) {
+        throw new Error('Email sending returned false');
+      }
     } catch (error) {
       logger.error({
         message: 'Failed to send contact notification email',
