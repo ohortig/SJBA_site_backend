@@ -6,12 +6,14 @@ class Member {
      firstName: string;
      lastName: string;
      semester: string;
+     email: string | null;
 
      constructor(data: MemberRow) {
           this.id = data.id;
           this.firstName = data.first_name;
           this.lastName = data.last_name;
           this.semester = data.semester;
+          this.email = data.email;
      }
 
      static fromDatabase(row: MemberRow | null): Member | null {
@@ -25,6 +27,7 @@ class Member {
                firstName: apiMember.first_name,
                lastName: apiMember.last_name,
                semester: apiMember.semester,
+               email: apiMember.email,
           };
      }
 
@@ -34,6 +37,7 @@ class Member {
                first_name: this.firstName,
                last_name: this.lastName,
                semester: this.semester,
+               email: this.email,
           };
      }
 
@@ -119,6 +123,7 @@ class Member {
                     first_name: memberData.first_name,
                     last_name: memberData.last_name,
                     semester: memberData.semester,
+                    email: memberData.email,
                })
                .select()
                .single();

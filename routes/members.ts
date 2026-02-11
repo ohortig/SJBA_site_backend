@@ -55,14 +55,16 @@ router.post('/', [
      body('lastName').trim().notEmpty().withMessage('Last name is required')
           .isLength({ max: 100 }).withMessage('Last name cannot exceed 100 characters'),
      body('semester').trim().notEmpty().withMessage('Semester is required'),
+     body('email').optional({ values: 'null' }).isEmail().withMessage('Email must be a valid email address'),
 ] as ValidationChain[], handleValidationErrors, asyncHandler(async (req: Request, res: Response) => {
-     const { firstName, lastName, semester } = req.body;
+     const { firstName, lastName, semester, email } = req.body;
 
      try {
           const member = await Member.create({
                first_name: firstName,
                last_name: lastName,
                semester: semester,
+               email: email ?? null,
           });
 
           res.status(201).json({
