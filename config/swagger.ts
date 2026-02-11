@@ -179,6 +179,28 @@ const options: swaggerJsdoc.Options = {
                 },
               },
             },
+            '/v1': {
+              get: {
+                tags: ['Health'],
+                summary: 'API Version Info',
+                responses: {
+                  '200': {
+                    description: 'API version and documentation link',
+                    content: {
+                      'application/json': {
+                        schema: {
+                          type: 'object',
+                          properties: {
+                            version: { type: 'string' },
+                            documentation: { type: 'string' },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
       },
