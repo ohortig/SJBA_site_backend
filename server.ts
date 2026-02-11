@@ -240,6 +240,8 @@ if (process.env.VERCEL !== '1') {
       database: 'Supabase PostgreSQL',
       healthCheck: `http://localhost:${PORT}/health`,
       apiInfo: `http://localhost:${PORT}/v1`,
+      docs: `http://localhost:${PORT}/docs`,
+      openapi: `http://localhost:${PORT}/docs.json`,
     });
   });
 }
