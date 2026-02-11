@@ -56,7 +56,11 @@ testConnection().catch((error: Error) => {
 // Note: Security headers are configured in vercel.json for edge-level performance
 
 // API Documentation (before rate limiter so docs are freely accessible)
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Force a trailing slash so Swagger UI relative assets resolve correctly on serverless/proxy deployments.
+app.get('/docs', (_req: Request, res: Response): void => {
+  res.redirect(301, '/docs/');
+});
+app.use('/docs/', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get('/docs.json', (_req: Request, res: Response): void => {
   res.json(swaggerSpec);
 });
