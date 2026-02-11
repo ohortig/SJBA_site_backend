@@ -1,9 +1,15 @@
 # Stern Jewish Business Association Backend API
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![CI](https://github.com/ohortig/SJBA_site_backend/actions/workflows/ci.yml/badge.svg)](https://github.com/ohortig/SJBA_site_backend/actions/workflows/ci.yml)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?logo=vercel&logoColor=white)](https://api.nyu-sjba.org)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D22.x-brightgreen)](https://nodejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+
 A secure and scalable Node.js/Express backend API for the Stern Jewish Business Association website.
 
-🌐 **Live API**: [api.nyu-sjba.org](https://api.nyu-sjba.org)
-📊 **Live Frontend**: [nyu-sjba.org](https://nyu-sjba.org)
+**Live API**: [api.nyu-sjba.org](https://api.nyu-sjba.org)
+**Live Frontend**: [nyu-sjba.org](https://nyu-sjba.org)
 
 > **Note:** This README will be updated soon with full information on local development and production deployment.
 
@@ -27,7 +33,7 @@ A secure and scalable Node.js/Express backend API for the Stern Jewish Business 
 ## Contact
 
 Omer Hortig
-📧 Email: [oh2065@nyu.edu](mailto:oh2065@nyu.edu)
+Email: [oh2065@nyu.edu](mailto:oh2065@nyu.edu)
 
 Feel free to reach out to report bugs, ask questions, or inquire about joining the development team.
 
