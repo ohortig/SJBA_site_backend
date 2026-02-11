@@ -37,8 +37,38 @@ const options: swaggerJsdoc.Options = {
             message: { type: 'string' },
             code: { type: 'string' },
             details: { type: 'array', items: { type: 'object' } },
+            reqBody: { type: 'object', nullable: true },
           },
           required: ['message', 'code'],
+        },
+        ApiError403: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: false },
+            error: {
+              type: 'object',
+              properties: {
+                message: { type: 'string', example: 'Forbidden - Invalid referer' },
+                code: { type: 'string', example: 'INVALID_REFERER' },
+              },
+            },
+          },
+        },
+        ApiError429: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean', example: false },
+            error: {
+              type: 'object',
+              properties: {
+                message: {
+                  type: 'string',
+                  example: 'Too many requests from this IP, please try again later.',
+                },
+                code: { type: 'string', example: 'RATE_LIMIT_EXCEEDED' },
+              },
+            },
+          },
         },
         PaginationInfo: {
           type: 'object',
@@ -149,6 +179,28 @@ const options: swaggerJsdoc.Options = {
                 },
               },
             },
+            '/v1': {
+              get: {
+                tags: ['Health'],
+                summary: 'API Version Info',
+                responses: {
+                  '200': {
+                    description: 'API version and documentation link',
+                    content: {
+                      'application/json': {
+                        schema: {
+                          type: 'object',
+                          properties: {
+                            version: { type: 'string' },
+                            documentation: { type: 'string' },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -201,6 +253,18 @@ const options: swaggerJsdoc.Options = {
                     },
                   },
                 },
+              },
+            },
+            '403': {
+              description: 'Forbidden (CORS/Referer)',
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/ApiError403' } },
+              },
+            },
+            '429': {
+              description: 'Too Many Requests',
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/ApiError429' } },
               },
             },
           },
@@ -296,13 +360,14 @@ const options: swaggerJsdoc.Options = {
               name: 'startDate',
               in: 'query',
               schema: { type: 'string', format: 'date-time' },
-              description: 'Only events starting on or after this date (ISO 8601)',
+              description: 'Only events starting on or after this date (ISO 8601 date or datetime)',
             },
             {
               name: 'endDate',
               in: 'query',
               schema: { type: 'string', format: 'date-time' },
-              description: 'Only events starting on or before this date (ISO 8601)',
+              description:
+                'Only events starting on or before this date (ISO 8601 date or datetime)',
             },
           ],
           responses: {
@@ -320,6 +385,20 @@ const options: swaggerJsdoc.Options = {
                         type: 'array',
                         items: { $ref: '#/components/schemas/Event' },
                       },
+                    },
+                  },
+                },
+              },
+            },
+            '400': {
+              description: 'Validation error',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: false },
+                      error: { $ref: '#/components/schemas/ApiError' },
                     },
                   },
                 },
@@ -354,6 +433,20 @@ const options: swaggerJsdoc.Options = {
                         type: 'array',
                         items: { $ref: '#/components/schemas/Event' },
                       },
+                    },
+                  },
+                },
+              },
+            },
+            '400': {
+              description: 'Validation error',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: false },
+                      error: { $ref: '#/components/schemas/ApiError' },
                     },
                   },
                 },
@@ -510,6 +603,18 @@ const options: swaggerJsdoc.Options = {
                     },
                   },
                 },
+              },
+            },
+            '403': {
+              description: 'Forbidden (CORS/Referer)',
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/ApiError403' } },
+              },
+            },
+            '429': {
+              description: 'Too Many Requests',
+              content: {
+                'application/json': { schema: { $ref: '#/components/schemas/ApiError429' } },
               },
             },
           },

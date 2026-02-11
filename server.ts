@@ -21,7 +21,6 @@ import {
 } from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
-import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger.js';
 
 dotenv.config();
@@ -55,8 +54,43 @@ testConnection().catch((error: Error) => {
 
 // Note: Security headers are configured in vercel.json for edge-level performance
 
-// API Documentation (before rate limiter so docs are freely accessible)
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// API Documentation (CDNs used for Vercel serverless compatibility)
+const swaggerHtml = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SJBA API Documentation</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css" />
+  <style>
+    body { margin: 0; padding: 0; }
+    #swagger-ui { height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="swagger-ui"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui-standalone-preset.min.js"></script>
+  <script>
+    window.onload = () => {
+      window.ui = SwaggerUIBundle({
+        url: '/docs.json',
+        dom_id: '#swagger-ui',
+        presets: [
+          SwaggerUIBundle.presets.apis,
+          SwaggerUIStandalonePreset
+        ],
+        layout: "StandaloneLayout",
+      });
+    };
+  </script>
+</body>
+</html>`;
+
+app.get('/docs', (_req: Request, res: Response): void => {
+  res.send(swaggerHtml);
+});
+
 app.get('/docs.json', (_req: Request, res: Response): void => {
   res.json(swaggerSpec);
 });
@@ -240,6 +274,8 @@ if (process.env.VERCEL !== '1') {
       database: 'Supabase PostgreSQL',
       healthCheck: `http://localhost:${PORT}/health`,
       apiInfo: `http://localhost:${PORT}/v1`,
+      docs: `http://localhost:${PORT}/docs`,
+      openapi: `http://localhost:${PORT}/docs.json`,
     });
   });
 }
