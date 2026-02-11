@@ -73,7 +73,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/api', limiter);
+app.use('/v1', limiter);
 
 // CORS configuration
 interface CorsCallback {
@@ -124,7 +124,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // HTTP request logging
 app.use(httpLogger);
 
-app.use('/api', validateReferer);
+app.use('/v1', validateReferer);
 
 // Root route for Vercel health checks and screenshots
 app.get('/', (_req: Request, res: Response): void => {
@@ -136,6 +136,8 @@ app.get('/', (_req: Request, res: Response): void => {
     endpoints: {
       health: '/health',
       api: '/v1',
+      docs: '/docs',
+      openapi: '/docs.json',
     },
   });
 });
@@ -166,25 +168,11 @@ app.use('/v1/contact', contactRoutes);
 app.use('/v1/members', membersRoutes);
 app.use('/v1/semesters', semestersRoutes);
 
-// API info endpoint
+// API version info endpoint
 app.get('/v1', (_req: Request, res: Response): void => {
   res.json({
-    name: 'SJBA API',
     version: '1.0.0',
-    description: 'Backend API for SJBA website with secure public endpoints',
-    endpoints: {
-      'GET /v1/board-members': 'Get all board members',
-      'GET /v1/board-members/:id': 'Get specific board member',
-      'POST /v1/newsletter-sign-ups': 'Sign up for newsletter',
-      'GET /v1/events': 'Get all events',
-      'GET /v1/events/upcoming': 'Get upcoming events',
-      'GET /v1/events/:id': 'Get specific event',
-      'POST /v1/contact': 'Submit contact form',
-      'GET /v1/members': 'Get all members',
-      'POST /v1/members': 'Create a new member',
-      'GET /v1/semesters': 'Get all semesters',
-      'POST /v1/semesters': 'Create a new semester',
-    },
+    documentation: '/docs',
   });
 });
 
