@@ -21,6 +21,8 @@ import {
 } from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger.js';
 
 dotenv.config();
 
@@ -52,6 +54,12 @@ testConnection().catch((error: Error) => {
 });
 
 // Note: Security headers are configured in vercel.json for edge-level performance
+
+// API Documentation (before rate limiter so docs are freely accessible)
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.get('/docs.json', (_req: Request, res: Response): void => {
+  res.json(swaggerSpec);
+});
 
 // Rate limiting
 const limiter = rateLimit({

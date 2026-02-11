@@ -13,6 +13,15 @@ A secure and scalable Node.js/Express backend API for the Stern Jewish Business 
 
 > **Note:** This README will be updated soon with full information on local development and production deployment.
 
+## API Documentation
+
+| URL                                                | Description              |
+| -------------------------------------------------- | ------------------------ |
+| [`/docs`](https://api.nyu-sjba.org/docs)           | Swagger UI               |
+| [`/docs.json`](https://api.nyu-sjba.org/docs.json) | Raw JSON spec for agents |
+
+Locally: `http://localhost:3000/docs`
+
 ## Available Scripts
 
 - `npm run dev` - Start development server with hot reload (tsx watch)
