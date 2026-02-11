@@ -15,7 +15,8 @@ interface ErrorResponse {
 // Express error handlers must have 4 parameters for Express to recognize them
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const errorHandler = (err: AppError, req: Request, res: Response, _next: NextFunction): void => {
-  let error: ErrorResponse = { message: err.message };
+  const status = err.status || (res.statusCode >= 400 ? res.statusCode : 500);
+  let error: ErrorResponse = { message: err.message, status, code: err.code };
 
   // Log error
   logger.error({
@@ -52,9 +53,10 @@ const errorHandler = (err: AppError, req: Request, res: Response, _next: NextFun
   });
 };
 
-const notFound = (req: Request, res: Response, next: NextFunction): void => {
-  const error = new Error(`Not found - ${req.originalUrl}`);
-  res.status(404);
+const notFound = (req: Request, _res: Response, next: NextFunction): void => {
+  const error = new Error(`Not found - ${req.originalUrl}`) as AppError;
+  error.status = 404;
+  error.code = 'NOT_FOUND';
   next(error);
 };
 
