@@ -6,7 +6,7 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D22.x-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
-A secure and scalable Node.js/Express backend API for the Stern Jewish Business Association website.
+A Node.js/Express backend API for the Stern Jewish Business Association website.
 
 **Live API**: [api.nyu-sjba.org](https://api.nyu-sjba.org)
 **Live Frontend**: [nyu-sjba.org](https://nyu-sjba.org)
@@ -37,11 +37,11 @@ Locally: `http://localhost:3000/docs`
 - `npm run seed:clear` - Clear database
 
 > **Note:** `helmet` and `supertest` are included as dependencies for future implementation
-> (security headers and API integration tests, respectively).
 
 ## Contact
 
 Omer Hortig
+
 Email: [oh2065@nyu.edu](mailto:oh2065@nyu.edu)
 
 Feel free to reach out to report bugs, ask questions, or inquire about joining the development team.
