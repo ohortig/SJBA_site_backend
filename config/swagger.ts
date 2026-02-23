@@ -115,7 +115,8 @@ const options: swaggerJsdoc.Options = {
             flyerFile: { type: 'string', nullable: true },
             rsvpLink: { type: 'string', nullable: true, format: 'uri' },
             description: { type: 'string', nullable: true },
-            semester: { type: 'string', example: 'Spring 2026' },
+            isVisible: { type: 'boolean', description: 'Whether the event is publicly visible' },
+            semester: { type: 'string', description: 'Semester code', example: 'S26' },
           },
         },
 
@@ -138,7 +139,7 @@ const options: swaggerJsdoc.Options = {
             id: { type: 'string', format: 'uuid' },
             firstName: { type: 'string' },
             lastName: { type: 'string' },
-            semester: { type: 'string', example: 'Spring 2026' },
+            semester: { type: 'string', description: 'Semester code', example: 'S26' },
             email: { type: 'string', nullable: true, format: 'email' },
           },
         },
@@ -148,7 +149,7 @@ const options: swaggerJsdoc.Options = {
           type: 'object',
           properties: {
             id: { type: 'string', format: 'uuid' },
-            semesterName: { type: 'string', example: 'Spring 2026' },
+            semesterName: { type: 'string', description: 'Semester code', example: 'S26' },
           },
         },
       },
@@ -757,8 +758,8 @@ const options: swaggerJsdoc.Options = {
                     lastName: { type: 'string', maxLength: 100 },
                     semester: {
                       type: 'string',
-                      description: 'Must match an existing semester name',
-                      example: 'Spring 2026',
+                      description: 'Must match an existing semester code',
+                      example: 'S26',
                     },
                     email: {
                       type: 'string',
@@ -845,8 +846,9 @@ const options: swaggerJsdoc.Options = {
                   properties: {
                     semesterName: {
                       type: 'string',
-                      maxLength: 100,
-                      example: 'Fall 2026',
+                      description: 'Semester code: [F|S] + 2-digit year',
+                      pattern: '^[FS]\\d{2}$',
+                      example: 'F26',
                     },
                   },
                 },

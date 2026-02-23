@@ -94,6 +94,10 @@ class BoardMember {
       errors.push('Major cannot exceed 100 characters');
     }
 
+    if (this.orderIndex < 0) {
+      errors.push('Order index must be greater than or equal to 0');
+    }
+
     return errors;
   }
 

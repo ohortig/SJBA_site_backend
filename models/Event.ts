@@ -50,6 +50,7 @@ class Event {
       flyerFile: apiEvent.flyer_file,
       rsvpLink: apiEvent.rsvp_link,
       description: apiEvent.description,
+      isVisible: apiEvent.is_visible,
       semester: apiEvent.semester,
     };
   }

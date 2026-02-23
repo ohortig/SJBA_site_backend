@@ -36,8 +36,8 @@ class Semester {
       errors.push('Semester name is required');
     }
 
-    if (this.semesterName && this.semesterName.length > 100) {
-      errors.push('Semester name cannot exceed 100 characters');
+    if (this.semesterName && !/^[FS]\d{2}$/.test(this.semesterName)) {
+      errors.push('Semester name must be in format [F|S]YY');
     }
 
     return errors;
