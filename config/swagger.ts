@@ -229,6 +229,51 @@ const options: swaggerJsdoc.Options = {
           },
         },
       },
+      '/db-health': {
+        get: {
+          tags: ['Health'],
+          summary: 'Database health check',
+          description:
+            'Performs a minimal read from the database to verify the connection is active. Intended for cron jobs that keep the Supabase database from pausing due to inactivity.',
+          responses: {
+            '200': {
+              description: 'Database connection is healthy',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      status: { type: 'string', example: 'ok' },
+                      message: {
+                        type: 'string',
+                        example: 'Database connection is healthy',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            '503': {
+              description: 'Database connection failed',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      status: { type: 'string', example: 'error' },
+                      message: { type: 'string', example: 'DB_CONNECTION_ERROR' },
+                      details: {
+                        type: 'string',
+                        description: 'Error details from the database driver',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
 
       // ═══════════════════════════════════════════════════════
       //  Board Members
