@@ -27,6 +27,7 @@ const options: swaggerJsdoc.Options = {
       { name: 'Members', description: 'Club membership' },
       { name: 'Semesters', description: 'Academic semester management' },
       { name: 'Health', description: 'Server health & info' },
+      { name: 'Site Config', description: 'Dynamic site configuration settings' },
     ],
     components: {
       schemas: {
@@ -150,6 +151,15 @@ const options: swaggerJsdoc.Options = {
           properties: {
             id: { type: 'string', format: 'uuid' },
             semesterName: { type: 'string', description: 'Semester code', example: 'S26' },
+          },
+        },
+
+        // ── Site Config ───────────────────────────────────────
+        SiteConfigItem: {
+          type: 'object',
+          properties: {
+            key: { type: 'string', example: 'mentorship_application_open' },
+            value: { type: 'string', example: 'true' },
           },
         },
       },
@@ -931,6 +941,59 @@ const options: swaggerJsdoc.Options = {
             },
             '409': {
               description: 'Semester with this name already exists',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: false },
+                      error: { $ref: '#/components/schemas/ApiError' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+
+      // ═══════════════════════════════════════════════════════
+      //  Site Config
+      // ═══════════════════════════════════════════════════════
+      '/v1/site-config': {
+        get: {
+          tags: ['Site Config'],
+          summary: 'Get site configuration values',
+          parameters: [
+            {
+              name: 'keys',
+              in: 'query',
+              required: true,
+              schema: { type: 'string' },
+              description: 'Comma-separated list of configuration keys to retrieve',
+              example: 'mentorship_application_open,mentorship_application_url',
+            },
+          ],
+          responses: {
+            '200': {
+              description: 'Site configuration values',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      data: {
+                        type: 'array',
+                        items: { $ref: '#/components/schemas/SiteConfigItem' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            '400': {
+              description: 'Missing required query parameter',
               content: {
                 'application/json': {
                   schema: {
