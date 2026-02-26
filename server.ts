@@ -18,6 +18,7 @@ import {
   contactRoutes,
   membersRoutes,
   semestersRoutes,
+  siteConfigRoutes,
 } from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
@@ -229,6 +230,7 @@ app.use('/v1/events', eventsRoutes);
 app.use('/v1/contact', contactRoutes);
 app.use('/v1/members', membersRoutes);
 app.use('/v1/semesters', semestersRoutes);
+app.use('/v1/site-config', siteConfigRoutes);
 
 // API version info endpoint
 app.get('/v1', (_req: Request, res: Response): void => {

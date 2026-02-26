@@ -4,3 +4,4 @@ export { default as newsletterRoutes } from './newsletter.js';
 export { default as contactRoutes } from './contact.js';
 export { default as membersRoutes } from './members.js';
 export { default as semestersRoutes } from './semesters.js';
+export { default as siteConfigRoutes } from './siteConfig.js';
