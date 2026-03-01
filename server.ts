@@ -114,38 +114,59 @@ interface CorsCallback {
   (err: Error | null, allow?: boolean): void;
 }
 
-const corsOptions: cors.CorsOptions = {
-  origin: function (origin: string | undefined, callback: CorsCallback): void {
-    // Allow requests with no origin (like curl requests)
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
+const PUBLIC_FRONTEND_URL = process.env.FRONTEND_URL;
+const ADMIN_FRONTEND_URL = process.env.ADMIN_FRONTEND_URL;
 
-    const allowedOrigins: string[] = [process.env.FRONTEND_URL].filter(Boolean) as string[];
+const adminOnlyPaths: string[] = ['/v1/auth', '/v1/admin'];
 
-    if (allowedOrigins.some((allowed) => origin.includes(allowed.replace(/^https?:\/\//, '')))) {
-      callback(null, true);
-    } else {
-      logger.warn({
-        message: 'CORS blocked request',
-        origin: origin,
-        allowedOrigins: allowedOrigins,
-      });
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type',
-    'Authorization',
-    'X-Requested-With',
-    'Cache-Control',
-    'Accept',
-    'Accept-Language',
-    'Accept-Encoding',
-  ],
+const corsOptions: cors.CorsOptionsDelegate<Request> = (
+  req: Request,
+  callback: (err: Error | null, options?: cors.CorsOptions) => void
+): void => {
+  const requestPath = req.path;
+  const requestOrigin = req.header('Origin');
+
+  const isAdminOnlyPath = adminOnlyPaths.some((path) => requestPath.startsWith(path));
+
+  const allowedOrigins: string[] = isAdminOnlyPath
+    ? ([ADMIN_FRONTEND_URL].filter(Boolean) as string[])
+    : ([PUBLIC_FRONTEND_URL].filter(Boolean) as string[]);
+
+  const options: cors.CorsOptions = {
+    origin: function (origin: string | undefined, originCallback: CorsCallback): void {
+      // Allow requests with no origin (like curl requests)
+      if (!origin) {
+        originCallback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        originCallback(null, true);
+      } else {
+        logger.warn({
+          message: 'CORS blocked request',
+          origin: origin,
+          path: requestPath,
+          allowedOrigins: allowedOrigins,
+          requestOrigin: requestOrigin,
+        });
+        originCallback(new Error('Not allowed by CORS'));
+      }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Cache-Control',
+      'Accept',
+      'Accept-Language',
+      'Accept-Encoding',
+    ],
+  };
+
+  callback(null, options);
 };
 
 app.use(cors(corsOptions));
@@ -159,6 +180,16 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(httpLogger);
 
 app.use('/v1', validateReferer);
+
+//Root route for admin.
+app.get('/v1/admin', (_req: Request, res: Response): void => {
+  res.json({
+    name: 'SJBA Admin API',
+    version: '1.0.0',
+    status: 'running',
+    description: 'Admin backend API for SJBA website',
+  });
+});
 
 // Root route for Vercel health checks and screenshots
 app.get('/', (_req: Request, res: Response): void => {
