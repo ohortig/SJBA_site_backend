@@ -223,19 +223,9 @@ class NewsletterSignup {
 
   static async findAll(options: NewsletterFindAllOptions = {}): Promise<NewsletterSignup[]> {
     const supabase = getSupabase();
-    const {
-      active,
-      page = 1,
-      limit = 50,
-      orderBy = 'created_at',
-      orderDirection = 'desc',
-    } = options;
+    const { page = 1, limit = 50, orderBy = 'created_at', orderDirection = 'desc' } = options;
 
     let query = supabase.from('newsletter_signups').select('*');
-
-    if (active !== undefined) {
-      query = query.eq('is_active', active);
-    }
 
     // Pagination
     const offset = (page - 1) * limit;

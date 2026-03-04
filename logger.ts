@@ -26,10 +26,10 @@ if (process.env.NODE_ENV !== 'production') {
   loggerConfig.transport = {
     target: 'pino-pretty',
     options: {
-      colorize: false,
+      colorize: true,
       singleLine: true,
       translateTime: 'HH:MM:ss',
-      ignore: 'pid,hostname',
+      ignore: 'pid,hostname,req,res,responseTime',
       messageKey: 'message',
     },
   };
@@ -42,6 +42,31 @@ export const logger = pino(loggerConfig);
 export const httpLogger = (pinoHttp as unknown as typeof pinoHttp.default)({
   logger,
   autoLogging: {
-    ignore: (req: { url?: string }) => req.url === '/health' || req.url === '/favicon.ico',
+    ignore: (req: { url?: string }) =>
+      req.url === '/health' || req.url === '/db-health' || req.url === '/favicon.ico',
+  },
+  // Clean one-line summaries instead of dumping req/res objects
+  customSuccessMessage: (
+    req: { method?: string; url?: string; originalUrl?: string },
+    res: { statusCode?: number }
+  ): string => {
+    return `${req.method} ${req.originalUrl || req.url} → ${res.statusCode}`;
+  },
+  customErrorMessage: (
+    req: { method?: string; url?: string; originalUrl?: string },
+    res: { statusCode?: number },
+    error: Error
+  ): string => {
+    return `${req.method} ${req.originalUrl || req.url} → ${res.statusCode} (${error.message})`;
+  },
+  // Strip verbose req/res objects from the log output
+  serializers: {
+    req: (req: { method?: string; url?: string }) => ({
+      method: req.method,
+      url: req.url,
+    }),
+    res: (res: { statusCode?: number }) => ({
+      statusCode: res.statusCode,
+    }),
   },
 });

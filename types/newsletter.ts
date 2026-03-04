@@ -4,7 +4,6 @@ export interface NewsletterSignupRow {
   first_name: string;
   last_name: string;
   created_at: string;
-  is_active?: boolean;
 }
 
 export interface NewsletterSignupData {
@@ -24,7 +23,6 @@ export interface NewsletterSignupJSON {
 }
 
 export interface NewsletterFindAllOptions {
-  active?: boolean;
   page?: number;
   limit?: number;
   orderBy?: string;

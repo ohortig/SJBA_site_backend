@@ -6,7 +6,7 @@ import http from 'http';
 
 import dotenv from 'dotenv';
 
-import { initializeSupabase, testConnection } from './config/supabase.js';
+import { initializeSupabase, testConnection, getSupabase } from './config/supabase.js';
 import { initializeEmailTransporter } from './config/email.js';
 import { initializeMailchimp, testMailchimpConnection } from './config/mailchimp.js';
 import { errorHandler, notFound, validateReferer } from './middleware/index.js';
@@ -18,6 +18,7 @@ import {
   contactRoutes,
   membersRoutes,
   semestersRoutes,
+  siteConfigRoutes,
 } from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
@@ -200,6 +201,7 @@ app.get('/', (_req: Request, res: Response): void => {
     description: 'Backend API for SJBA website',
     endpoints: {
       health: '/health',
+      dbHealth: '/db-health',
       api: '/v1',
       docs: '/docs',
       openapi: '/docs.json',
@@ -214,6 +216,33 @@ app.get('/health', (_req: Request, res: Response): void => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
   });
+});
+
+app.get('/db-health', async (_req: Request, res: Response): Promise<void> => {
+  try {
+    const supabase = getSupabase();
+    const { error } = await supabase.from('events').select('id').limit(1);
+
+    if (error) {
+      throw error;
+    }
+
+    res.status(200).json({
+      status: 'ok',
+      message: 'Database connection is healthy',
+    });
+  } catch (error) {
+    const err = error as Error;
+    logger.error({
+      message: 'Database health check failed',
+      error: err.message,
+    });
+    res.status(503).json({
+      status: 'error',
+      message: 'DB_CONNECTION_ERROR',
+      details: err.message,
+    });
+  }
 });
 
 // Handle favicon requests to prevent 404 errors
@@ -232,6 +261,7 @@ app.use('/v1/events', eventsRoutes);
 app.use('/v1/contact', contactRoutes);
 app.use('/v1/members', membersRoutes);
 app.use('/v1/semesters', semestersRoutes);
+app.use('/v1/site-config', siteConfigRoutes);
 
 // API version info endpoint
 app.get('/v1', (_req: Request, res: Response): void => {
