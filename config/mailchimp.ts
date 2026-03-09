@@ -20,7 +20,8 @@ export const initializeMailchimp = (): void => {
     // logger.error(message);
     // throw new Error(message);
     logger.warn(message);
-    return; // Skip Mailchimp initialization but allow the app to run
+    // Skip Mailchimp initialization but allow the app to run
+    return;
   }
 
   client.setConfig({
