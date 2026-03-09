@@ -17,8 +17,9 @@ export const initializeMailchimp = (): void => {
     }
 
     const message = `Missing required Mailchimp environment variable(s): ${missingVars.join(', ')}`;
-    logger.error(message);
-    throw new Error(message);
+    logger.warn(message);
+    // Skip Mailchimp initialization but allow the app to run
+    return;
   }
 
   client.setConfig({

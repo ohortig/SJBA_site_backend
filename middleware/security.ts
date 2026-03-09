@@ -15,7 +15,9 @@ const validateReferer: RequestHandler = (req: Request, res: Response, next: Next
     return;
   }
 
-  const allowedDomains = [process.env.FRONTEND_URL].filter(Boolean) as string[];
+  const allowedDomains = [process.env.FRONTEND_URL, process.env.ADMIN_URL].filter(
+    Boolean
+  ) as string[];
 
   // If no allowed domains are configured, allow all requests
   if (allowedDomains.length === 0) {

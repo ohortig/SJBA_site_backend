@@ -115,6 +115,10 @@ interface CorsCallback {
   (err: Error | null, allow?: boolean): void;
 }
 
+const allowedOrigins = [process.env.FRONTEND_URL, process.env.ADMIN_URL].filter(
+  Boolean
+) as string[];
+
 const corsOptions: cors.CorsOptions = {
   origin: function (origin: string | undefined, callback: CorsCallback): void {
     // Allow requests with no origin (like curl requests)
@@ -123,9 +127,11 @@ const corsOptions: cors.CorsOptions = {
       return;
     }
 
-    const allowedOrigins: string[] = [process.env.FRONTEND_URL].filter(Boolean) as string[];
+    // In development, allow all localhost origins regardless of port
+    const isLocalhost =
+      process.env.NODE_ENV !== 'production' && /^https?:\/\/localhost(:\d+)?$/.test(origin);
 
-    if (allowedOrigins.some((allowed) => origin.includes(allowed.replace(/^https?:\/\//, '')))) {
+    if (isLocalhost || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       logger.warn({
