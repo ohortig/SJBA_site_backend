@@ -9,12 +9,7 @@ import dotenv from 'dotenv';
 import { initializeSupabase, testConnection, getSupabase } from './config/supabase.js';
 import { initializeEmailTransporter } from './config/email.js';
 import { initializeMailchimp, testMailchimpConnection } from './config/mailchimp.js';
-import {
-  errorHandler,
-  notFound,
-  requireAuthenticatedUser,
-  validateReferer,
-} from './middleware/index.js';
+import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 
 import {
   boardMembersRoutes,
@@ -171,22 +166,6 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(httpLogger);
 
 app.use('/v1', validateReferer);
-
-// Root route for authenticated admin requests.
-//Does requireAuthenticatedUser return a bool? No, it sends a 401 response if not authenticated and ends the request-response cycle. If it calls next(), the request is authenticated and processing continues to the route handler.
-app.get('/v1/admin', requireAuthenticatedUser, (req: Request, res: Response): void => {
-  res.json({
-    name: 'SJBA Admin API',
-    version: '1.0.0',
-    status: 'running',
-    description: 'Admin backend API for SJBA website',
-    user: {
-      id: req.authUser?.id,
-      email: req.authUser?.email,
-      role: req.authUser?.role,
-    },
-  });
-});
 
 // Root route for Vercel health checks and screenshots
 app.get('/', (_req: Request, res: Response): void => {

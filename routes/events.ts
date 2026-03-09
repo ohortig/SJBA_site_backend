@@ -8,7 +8,7 @@ import {
   type ValidationError,
 } from 'express-validator';
 import { Event } from '../models/index.js';
-import { asyncHandler, validateInput } from '../middleware/index.js';
+import { asyncHandler, validateInput, requireAuthenticatedUser } from '../middleware/index.js';
 
 const router = express.Router();
 
@@ -143,5 +143,21 @@ router.get(
     });
   })
 );
+
+// @desc    Create new event (placeholder)
+// @route   POST /v1/events/admin
+// @access  Admin
+router.post('/', requireAuthenticatedUser, (req: Request, res: Response): void => {
+  // placeholder logic - will be implemented in the future
+  res.json({
+    name: 'Create new event',
+    description: 'Admin only endpoint - will be implemented in the future',
+    user: {
+      id: req.authUser?.id,
+      email: req.authUser?.email,
+      role: req.authUser?.role,
+    },
+  });
+});
 
 export default router;
