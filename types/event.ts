@@ -20,6 +20,7 @@ export interface EventsQueryParams {
   search?: string;
   startDate?: string;
   endDate?: string;
+  semester?: string;
 }
 
 export interface EventPaginatedResult<T> {

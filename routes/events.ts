@@ -22,6 +22,7 @@ interface EventsQuery {
   search?: string;
   startDate?: string;
   endDate?: string;
+  semester?: string;
 }
 
 // Validation middleware
@@ -62,10 +63,15 @@ router.get(
       .isISO8601()
       .withMessage('startDate must be a valid ISO 8601 date'),
     query('endDate').optional().isISO8601().withMessage('endDate must be a valid ISO 8601 date'),
+    query('semester')
+      .optional()
+      .trim()
+      .matches(/^[FS]\d{2}$/)
+      .withMessage('semester must be in format [F|S]YY'),
   ] as ValidationChain[],
   handleValidationErrors,
   asyncHandler(async (req: Request<object, object, object, EventsQuery>, res: Response) => {
-    const { page = '1', limit = '10', search, startDate, endDate } = req.query;
+    const { page = '1', limit = '10', search, startDate, endDate, semester } = req.query;
 
     const result = await Event.findAll({
       page: parseInt(page, 10),
@@ -73,6 +79,7 @@ router.get(
       search,
       startDate,
       endDate,
+      semester,
     });
 
     res.status(200).json({

@@ -78,7 +78,7 @@ class Event {
    */
   static async findAll(options: EventsQueryParams = {}): Promise<EventPaginatedResult<Event>> {
     const supabase = getSupabase();
-    const { page = 1, limit = 10, search, startDate, endDate } = options;
+    const { page = 1, limit = 10, search, startDate, endDate, semester } = options;
 
     let query = supabase.from('events').select('*').eq('is_visible', true);
 
@@ -103,6 +103,11 @@ class Event {
     if (endDate) {
       query = query.lte('start_time', endDate);
       countQuery = countQuery.lte('start_time', endDate);
+    }
+
+    if (semester) {
+      query = query.eq('semester', semester);
+      countQuery = countQuery.eq('semester', semester);
     }
 
     const [countResult, eventsResult] = await Promise.all([
