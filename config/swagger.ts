@@ -425,6 +425,12 @@ const options: swaggerJsdoc.Options = {
               description:
                 'Only events starting on or before this date (ISO 8601 date or datetime)',
             },
+            {
+              name: 'semester',
+              in: 'query',
+              schema: { type: 'string', example: 'S26' },
+              description: 'Only events for the provided semester code ([F|S]YY)',
+            },
           ],
           responses: {
             '200': {
