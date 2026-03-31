@@ -28,6 +28,7 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 3000;
+const skipStartupConnectionTests = process.env.SKIP_STARTUP_CONNECTION_TESTS === 'true';
 
 // Trust proxy when deployed (Vercel)
 if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
@@ -37,21 +38,27 @@ if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
 initializeSupabase();
 initializeEmailTransporter();
 initializeMailchimp();
-testMailchimpConnection().catch((error: Error) => {
-  logger.error({
-    message: 'Failed to connect to Mailchimp during startup - will retry on first request',
-    error: error.message,
+if (skipStartupConnectionTests) {
+  logger.info({
+    message: 'Skipping startup connection tests via SKIP_STARTUP_CONNECTION_TESTS',
   });
-  // Don't exit the process - let the server start and handle errors per-request
-});
+} else {
+  testMailchimpConnection().catch((error: Error) => {
+    logger.error({
+      message: 'Failed to connect to Mailchimp during startup - will retry on first request',
+      error: error.message,
+    });
+    // Don't exit the process - let the server start and handle errors per-request
+  });
 
-testConnection().catch((error: Error) => {
-  logger.error({
-    message: 'Failed to connect to Supabase during startup - will retry on first request',
-    error: error.message,
+  testConnection().catch((error: Error) => {
+    logger.error({
+      message: 'Failed to connect to Supabase during startup - will retry on first request',
+      error: error.message,
+    });
+    // Don't exit the process - let the server start and handle errors per-request
   });
-  // Don't exit the process - let the server start and handle errors per-request
-});
+}
 
 // Note: Security headers are configured in vercel.json for edge-level performance
 
@@ -97,6 +104,9 @@ app.get('/docs.json', (_req: Request, res: Response): void => {
 });
 
 // Rate limiting
+const forceEnableRateLimit = process.env.ENABLE_RATE_LIMIT === 'true';
+const shouldEnableRateLimit = process.env.NODE_ENV !== 'development' || forceEnableRateLimit;
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
@@ -108,7 +118,18 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
-app.use('/v1', limiter);
+if (shouldEnableRateLimit) {
+  logger.info({
+    message: forceEnableRateLimit
+      ? 'Rate limiting enabled via ENABLE_RATE_LIMIT'
+      : 'Rate limiting enabled',
+  });
+  app.use('/v1', limiter);
+} else {
+  logger.info({
+    message: 'Rate limiting disabled in development mode',
+  });
+}
 
 // CORS configuration
 interface CorsCallback {

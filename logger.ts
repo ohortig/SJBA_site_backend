@@ -18,7 +18,7 @@ interface LoggerConfig {
 
 // Configure logger based on environment
 const loggerConfig: LoggerConfig = {
-  level: 'info',
+  level: process.env.LOG_LEVEL || 'info',
 };
 
 // Use pino-pretty unless in production

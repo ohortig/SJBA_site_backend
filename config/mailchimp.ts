@@ -2,8 +2,17 @@ import client from '@mailchimp/mailchimp_marketing';
 import crypto from 'crypto';
 import { logger } from '../logger.js';
 
+export const isMailchimpSyncDisabled = (): boolean => {
+  return process.env.DISABLE_MAILCHIMP_SYNC === 'true';
+};
+
 // Initialize Mailchimp client
 export const initializeMailchimp = (): void => {
+  if (isMailchimpSyncDisabled()) {
+    logger.info({ message: 'Mailchimp sync disabled via DISABLE_MAILCHIMP_SYNC' });
+    return;
+  }
+
   const apiKey = process.env.MAILCHIMP_API_KEY;
   const serverPrefix = process.env.MAILCHIMP_SERVER_PREFIX;
 
@@ -30,6 +39,11 @@ export const initializeMailchimp = (): void => {
 
 // Test Mailchimp connection on startup
 export const testMailchimpConnection = async (): Promise<void> => {
+  if (isMailchimpSyncDisabled()) {
+    logger.info({ message: 'Skipping Mailchimp connection test because sync is disabled' });
+    return;
+  }
+
   try {
     const response = await client.ping.get();
     if (
@@ -53,6 +67,14 @@ export const addSubscriber = async (
   firstName: string,
   lastName: string
 ): Promise<void> => {
+  if (isMailchimpSyncDisabled()) {
+    logger.info({
+      message: 'Mailchimp sync disabled - skipping subscriber sync',
+      email,
+    });
+    return;
+  }
+
   const listId = process.env.MAILCHIMP_LIST_ID;
 
   if (!listId) {
@@ -90,6 +112,14 @@ export const addSubscriber = async (
 };
 
 export const removeSubscriber = async (email: string): Promise<void> => {
+  if (isMailchimpSyncDisabled()) {
+    logger.info({
+      message: 'Mailchimp sync disabled - skipping subscriber removal',
+      email,
+    });
+    return;
+  }
+
   const listId = process.env.MAILCHIMP_LIST_ID;
 
   if (!listId) {

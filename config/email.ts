@@ -3,10 +3,21 @@ import { logger } from '../logger.js';
 
 let resend: Resend | null = null;
 
+export const isEmailSendingDisabled = (): boolean => {
+  return process.env.DISABLE_EMAIL_SENDING === 'true';
+};
+
 /**
  * Initialize Resend client
  */
 export const initializeEmailTransporter = (): void => {
+  if (isEmailSendingDisabled()) {
+    logger.info({
+      message: 'Email sending disabled via DISABLE_EMAIL_SENDING',
+    });
+    return;
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
@@ -24,7 +35,7 @@ export const initializeEmailTransporter = (): void => {
  * Check if email sending is available
  */
 export const isEmailEnabled = (): boolean => {
-  return resend !== null;
+  return !isEmailSendingDisabled() && resend !== null;
 };
 
 /**
