@@ -1,5 +1,11 @@
 import { getSupabase } from '../config/supabase.js';
-import type { EventRow, EventsQueryParams, EventPaginatedResult } from '../types/index.js';
+import {
+  DEFAULT_EVENT_SORT,
+  type EventPaginatedResult,
+  type EventRow,
+  type EventSort,
+  type EventsQueryParams,
+} from '../types/index.js';
 
 class Event {
   id: string;
@@ -79,6 +85,8 @@ class Event {
   static async findAll(options: EventsQueryParams = {}): Promise<EventPaginatedResult<Event>> {
     const supabase = getSupabase();
     const { page = 1, limit = 10, search, startDate, endDate, semester } = options;
+    const sort: EventSort = options.sort ?? DEFAULT_EVENT_SORT;
+    const ascending = sort === 'startTime:asc';
 
     let query = supabase.from('events').select('*').eq('is_visible', true);
 
@@ -112,7 +120,12 @@ class Event {
 
     const [countResult, eventsResult] = await Promise.all([
       countQuery,
-      query.order('start_time', { ascending: true }).range((page - 1) * limit, page * limit - 1),
+      query
+        // Sorting is applied before pagination so page boundaries match the requested order.
+        .order('start_time', { ascending })
+        .order('created_at', { ascending })
+        .order('id', { ascending: true })
+        .range((page - 1) * limit, page * limit - 1),
     ]);
 
     if (countResult.error) {

@@ -1,3 +1,7 @@
+export type EventSort = 'startTime:asc' | 'startTime:desc';
+
+export const DEFAULT_EVENT_SORT: EventSort = 'startTime:asc';
+
 export interface EventRow {
   id: string;
   created_at: string;
@@ -21,6 +25,7 @@ export interface EventsQueryParams {
   startDate?: string;
   endDate?: string;
   semester?: string;
+  sort?: EventSort;
 }
 
 export interface EventPaginatedResult<T> {

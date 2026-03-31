@@ -23,6 +23,8 @@ A Node.js/Express backend API for the Stern Jewish Business Association website.
 
 Locally: `http://localhost:3000/docs`
 
+`GET /v1/events` supports explicit event-time sorting via `sort=startTime:asc` or `sort=startTime:desc`. The default is `startTime:asc`; see `/docs` for the full pagination and filtering contract.
+
 ## Available Scripts
 
 - `npm run dev` - Start development server with hot reload (tsx watch)

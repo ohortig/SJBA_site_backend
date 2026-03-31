@@ -23,6 +23,7 @@ interface EventsQuery {
   startDate?: string;
   endDate?: string;
   semester?: string;
+  sort?: string;
 }
 
 // Validation middleware
@@ -68,10 +69,14 @@ router.get(
       .trim()
       .matches(/^[FS]\d{2}$/)
       .withMessage('semester must be in format [F|S]YY'),
+    query('sort')
+      .optional()
+      .matches(/^startTime:(asc|desc)$/)
+      .withMessage('sort must be one of startTime:asc or startTime:desc'),
   ] as ValidationChain[],
   handleValidationErrors,
   asyncHandler(async (req: Request<object, object, object, EventsQuery>, res: Response) => {
-    const { page = '1', limit = '10', search, startDate, endDate, semester } = req.query;
+    const { page = '1', limit = '10', search, startDate, endDate, semester, sort } = req.query;
 
     const result = await Event.findAll({
       page: parseInt(page, 10),
@@ -80,6 +85,7 @@ router.get(
       startDate,
       endDate,
       semester,
+      sort: sort as 'startTime:asc' | 'startTime:desc' | undefined,
     });
 
     res.status(200).json({
@@ -152,7 +158,7 @@ router.get(
 );
 
 // @desc    Create new event (placeholder)
-// @route   POST /v1/events/admin
+// @route   POST /v1/events
 // @access  Admin
 router.post('/', requireAuthenticatedUser, (req: Request, res: Response): void => {
   // placeholder logic - will be implemented in the future
