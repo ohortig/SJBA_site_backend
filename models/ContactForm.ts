@@ -1,5 +1,5 @@
 import { getSupabase } from '../config/supabase.js';
-import { sendEmail, isEmailEnabled } from '../config/email.js';
+import { sendEmail, isEmailEnabled, isEmailSendingDisabled } from '../config/email.js';
 import type { ContactSubmissionRow } from '../types/index.js';
 import { logger } from '../logger.js';
 
@@ -149,6 +149,11 @@ class ContactForm {
    * Send notification email about a contact form submission
    */
   async sendNotificationEmail(): Promise<boolean> {
+    if (isEmailSendingDisabled()) {
+      logger.info({ message: 'Email sending disabled - skipping contact notification email' });
+      return true;
+    }
+
     if (!isEmailEnabled()) {
       logger.warn({ message: 'Email not configured - skipping notification' });
       return false;

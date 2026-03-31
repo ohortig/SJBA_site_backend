@@ -39,6 +39,15 @@ Locally: `http://localhost:3000/docs`
 
 > **Note:** `helmet` and `supertest` are included as dependencies for future implementation
 
+## Environment Notes
+
+- In `NODE_ENV=development`, rate limiting is disabled by default.
+- Set `ENABLE_RATE_LIMIT=true` to force rate limiting on locally when you want to test `429` handling.
+- Set `SKIP_STARTUP_CONNECTION_TESTS=true` to skip the startup Mailchimp and Supabase connectivity checks.
+- Set `DISABLE_EMAIL_SENDING=true` to let contact form flows work locally without sending outbound email.
+- Set `DISABLE_MAILCHIMP_SYNC=true` to let newsletter signups work locally without touching Mailchimp.
+- Set `LOG_LEVEL=silent` or `LOG_LEVEL=debug` to reduce or increase local logging verbosity.
+
 ## Contact
 
 Omer Hortig
