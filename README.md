@@ -52,9 +52,9 @@ Locally: `http://localhost:3000/docs`
 
 ## Contact
 
-Omer Hortig
+Stern Jewish Business Association
 
-Email: [oh2065@nyu.edu](mailto:oh2065@nyu.edu)
+Email: [sjba@stern.nyu.edu](mailto:sjba@stern.nyu.edu)
 
 Feel free to reach out to report bugs, ask questions, or inquire about joining the development team.
 
