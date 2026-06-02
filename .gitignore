@@ -27,3 +27,6 @@ dist-ssr
 .env
 
 .vercel
+
+# Local production Supabase snapshots
+supabase/.cloud-snapshot/
