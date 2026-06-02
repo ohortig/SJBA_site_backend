@@ -29,6 +29,41 @@ Reset local state from migrations:
 supabase db reset
 ```
 
+## Deploy Migrations To Production
+
+Production migrations are deployed by GitHub Actions after migration files are merged or pushed to `main`.
+
+The normal workflow is:
+
+1. Create the migration locally:
+
+   ```bash
+   supabase migration new <name>
+   ```
+
+2. Add SQL to the generated file under `supabase/migrations/`.
+3. Test locally:
+
+   ```bash
+   npm run supabase:reset
+   ```
+
+4. Commit and push the migration file.
+5. Open a PR and review the SQL.
+6. Merge to `main`.
+
+After the merge, `.github/workflows/supabase-migrations.yml` links the Supabase project, shows migration status, runs `supabase db push --linked --dry-run`, and then runs `supabase db push --linked --yes`.
+
+Required GitHub Actions secrets:
+
+- `SUPABASE_ACCESS_TOKEN` - Supabase personal access token for the CLI.
+- `SUPABASE_PROJECT_REF` - Production project ref.
+- `SUPABASE_DB_PASSWORD` - Production database password.
+
+The workflow uses GitHub's `production` environment. Configure environment approval rules in GitHub if production migrations should require a manual approval before they run.
+
+Do not manually run `supabase db push --linked` for ordinary production deploys. Use the CI workflow so Git history and remote migration history move together.
+
 ## SQL Snippets
 
 Use `supabase/snippets/` for saved SQL that is useful to run manually but should not become migration history. Good examples include inspection queries, local row edits, cleanup helpers, and draft SQL before it becomes a real migration.

@@ -44,6 +44,8 @@ Useful local URLs:
 
 For Supabase workflows, see [SUPABASE.md](./SUPABASE.md). For the full local setup and cloud mirror sequence, go directly to [supabase/docs/supabase-local.md](./supabase/docs/supabase-local.md).
 
+Production Supabase migrations are deployed by GitHub Actions after migration files are merged to `main`; see [supabase/docs/supabase-migrations.md](./supabase/docs/supabase-migrations.md).
+
 ## API Documentation
 
 | URL                                                | Description              |
