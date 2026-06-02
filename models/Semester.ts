@@ -1,4 +1,4 @@
-import { getSupabase } from '../config/supabase.js';
+import { describeSupabaseError, getSupabase } from '../config/supabase.js';
 import type { SemesterRow } from '../types/index.js';
 
 class Semester {
@@ -52,7 +52,7 @@ class Semester {
       .order('semester_name', { ascending: true });
 
     if (error) {
-      throw new Error(`Failed to fetch semesters: ${error.message}`);
+      throw new Error(`Failed to fetch semesters: ${describeSupabaseError(error)}`);
     }
 
     return (data as SemesterRow[]).map((row) => Semester.fromDatabase(row)!);
@@ -77,7 +77,7 @@ class Semester {
 
     // PGRST116 is the "Results contain 0 rows" / not-found case; treat other errors as failures.
     if (existingError && existingError.code !== 'PGRST116') {
-      throw new Error(`Failed to check existing semester: ${existingError.message}`);
+      throw new Error(`Failed to check existing semester: ${describeSupabaseError(existingError)}`);
     }
     if (existing) {
       throw new Error(`Semester '${semesterData.semester_name}' already exists.`);
@@ -92,7 +92,7 @@ class Semester {
       .single();
 
     if (error) {
-      throw new Error(`Failed to create semester: ${error.message}`);
+      throw new Error(`Failed to create semester: ${describeSupabaseError(error)}`);
     }
 
     return Semester.fromDatabase(data as SemesterRow);

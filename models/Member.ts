@@ -1,4 +1,4 @@
-import { getSupabase } from '../config/supabase.js';
+import { describeSupabaseError, getSupabase } from '../config/supabase.js';
 import type { MemberRow } from '../types/index.js';
 
 class Member {
@@ -77,7 +77,7 @@ class Member {
       .order('first_name', { ascending: true });
 
     if (error) {
-      throw new Error(`Failed to fetch members: ${error.message}`);
+      throw new Error(`Failed to fetch members: ${describeSupabaseError(error)}`);
     }
 
     return (data as MemberRow[]).map((row) => Member.fromDatabase(row)!);
@@ -110,7 +110,7 @@ class Member {
 
       // Any other error means we failed to verify the semester, not that it is invalid
       throw new Error(
-        `Failed to verify semester '${memberData.semester}': ${semesterError.message}`
+        `Failed to verify semester '${memberData.semester}': ${describeSupabaseError(semesterError)}`
       );
     }
 
@@ -133,7 +133,7 @@ class Member {
       .single();
 
     if (error) {
-      throw new Error(`Failed to create member: ${error.message}`);
+      throw new Error(`Failed to create member: ${describeSupabaseError(error)}`);
     }
 
     return Member.fromDatabase(data as MemberRow);

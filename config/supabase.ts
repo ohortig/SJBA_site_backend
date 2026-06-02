@@ -2,6 +2,113 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '../logger.js';
 
 let supabase: SupabaseClient | null = null;
+const SUPABASE_FETCH_TIMEOUT_MS = 5000;
+
+export type SupabaseEnvironment = 'local' | 'production' | 'unknown';
+
+export interface SupabaseConnectionDiagnostic {
+  code: 'SUPABASE_CONNECTION_FAILED' | 'SUPABASE_CONNECTION_TIMEOUT';
+  message: string;
+  environment: SupabaseEnvironment;
+  url: string;
+  cause: string;
+}
+
+const getErrorName = (error: unknown): string | undefined => {
+  return error instanceof Error ? error.name : undefined;
+};
+
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  if (typeof error === 'object' && error && 'message' in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === 'string') {
+      return message;
+    }
+  }
+
+  return String(error);
+};
+
+export const getSupabaseEnvironment = (supabaseUrl: string): SupabaseEnvironment => {
+  try {
+    const parsedUrl = new URL(supabaseUrl);
+    const hostname = parsedUrl.hostname.toLowerCase();
+
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1') {
+      return 'local';
+    }
+
+    if (hostname.endsWith('.supabase.co')) {
+      return 'production';
+    }
+
+    return 'unknown';
+  } catch {
+    return 'unknown';
+  }
+};
+
+export const isSupabaseConnectionError = (error: unknown): boolean => {
+  const errorName = getErrorName(error);
+  const errorMessage = getErrorMessage(error).toLowerCase();
+
+  return (
+    errorName === 'AbortError' ||
+    errorMessage.includes('fetch failed') ||
+    errorMessage.includes('network') ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('timed out')
+  );
+};
+
+export const describeSupabaseConnectionError = (
+  error: unknown,
+  supabaseUrl = process.env.SUPABASE_URL || 'unknown'
+): SupabaseConnectionDiagnostic => {
+  const environment = getSupabaseEnvironment(supabaseUrl);
+  const errorName = getErrorName(error);
+  const cause = getErrorMessage(error);
+  const isTimeout =
+    errorName === 'AbortError' ||
+    cause.toLowerCase().includes('timeout') ||
+    cause.toLowerCase().includes('timed out');
+
+  if (isTimeout) {
+    return {
+      code: 'SUPABASE_CONNECTION_TIMEOUT',
+      message: `Timed out connecting to ${environment} Supabase at ${supabaseUrl} after ${SUPABASE_FETCH_TIMEOUT_MS}ms. Check Supabase availability and network latency from this runtime.`,
+      environment,
+      url: supabaseUrl,
+      cause,
+    };
+  }
+
+  const localGuidance =
+    'Is Supabase running? Start it with `npm run supabase:start` and confirm SUPABASE_URL points to the local Project URL.';
+  const remoteGuidance = 'Check network/DNS/TLS access from this runtime and verify SUPABASE_URL.';
+  const guidance = environment === 'local' ? localGuidance : remoteGuidance;
+
+  return {
+    code: 'SUPABASE_CONNECTION_FAILED',
+    message: `Could not connect to ${environment} Supabase at ${supabaseUrl}. ${guidance}`,
+    environment,
+    url: supabaseUrl,
+    cause,
+  };
+};
+
+export const describeSupabaseError = (error: unknown): string => {
+  if (!isSupabaseConnectionError(error)) {
+    return getErrorMessage(error);
+  }
+
+  const diagnostic = describeSupabaseConnectionError(error);
+  return `${diagnostic.message} Cause: ${diagnostic.cause}`;
+};
 
 export const initializeSupabase = (): SupabaseClient => {
   if (!process.env.SUPABASE_URL) {
@@ -31,7 +138,7 @@ export const initializeSupabase = (): SupabaseClient => {
         fetch: (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
           // Add timeout for serverless environments
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout for serverless
+          const timeoutId = setTimeout(() => controller.abort(), SUPABASE_FETCH_TIMEOUT_MS);
 
           return fetch(input, {
             ...init,
@@ -41,11 +148,12 @@ export const initializeSupabase = (): SupabaseClient => {
       },
     });
 
+    const supabaseEnvironment = getSupabaseEnvironment(process.env.SUPABASE_URL);
+
     logger.info({
-      message: 'Supabase client initialized successfully',
-      url: process.env.SUPABASE_URL
-        ? `${process.env.SUPABASE_URL.substring(0, 20)}...`
-        : 'undefined',
+      message: `Supabase client initialized successfully (${supabaseEnvironment} Supabase)`,
+      supabaseEnvironment,
+      url: process.env.SUPABASE_URL,
     });
     return supabase;
   } catch (error) {
@@ -83,15 +191,15 @@ export const testConnection = async (): Promise<boolean> => {
   } catch (error) {
     const err = error as Error & { name: string };
     // Check if it's a network/timeout error vs configuration error
-    if (
-      err.name === 'AbortError' ||
-      err.message.includes('fetch failed') ||
-      err.message.includes('timeout')
-    ) {
+    if (isSupabaseConnectionError(error)) {
+      const diagnostic = describeSupabaseConnectionError(error);
       logger.warn({
         message: 'Supabase connection test failed due to network/timeout',
-        error: err.message,
-        errorType: err.name,
+        diagnostic: diagnostic.message,
+        cause: diagnostic.cause,
+        code: diagnostic.code,
+        supabaseEnvironment: diagnostic.environment,
+        supabaseUrl: diagnostic.url,
       });
     } else {
       logger.error({

@@ -11,7 +11,6 @@ export interface ApiError {
   message: string;
   code: string;
   details?: unknown;
-  reqBody?: unknown;
 }
 
 export interface PaginationInfo {

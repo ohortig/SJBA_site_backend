@@ -1,4 +1,4 @@
-import { getSupabase } from '../config/supabase.js';
+import { describeSupabaseError, getSupabase } from '../config/supabase.js';
 import { sendEmail, isEmailEnabled, isEmailSendingDisabled } from '../config/email.js';
 import type { ContactSubmissionRow } from '../types/index.js';
 import { logger } from '../logger.js';
@@ -139,7 +139,7 @@ class ContactForm {
       .single();
 
     if (error) {
-      throw new Error(`Failed to create contact submission: ${error.message}`);
+      throw new Error(`Failed to create contact submission: ${describeSupabaseError(error)}`);
     }
 
     return ContactForm.fromDatabase(data as ContactSubmissionRow);

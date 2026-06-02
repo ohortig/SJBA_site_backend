@@ -1,4 +1,4 @@
-import { getSupabase } from '../config/supabase.js';
+import { describeSupabaseError, getSupabase } from '../config/supabase.js';
 import {
   DEFAULT_EVENT_SORT,
   type EventPaginatedResult,
@@ -129,11 +129,11 @@ class Event {
     ]);
 
     if (countResult.error) {
-      throw new Error(`Failed to count events: ${countResult.error.message}`);
+      throw new Error(`Failed to count events: ${describeSupabaseError(countResult.error)}`);
     }
 
     if (eventsResult.error) {
-      throw new Error(`Failed to fetch events: ${eventsResult.error.message}`);
+      throw new Error(`Failed to fetch events: ${describeSupabaseError(eventsResult.error)}`);
     }
 
     const total = countResult.count ?? 0;
@@ -165,7 +165,7 @@ class Event {
       if (error.code === 'PGRST116') {
         return null; // Not found
       }
-      throw new Error(`Failed to fetch event: ${error.message}`);
+      throw new Error(`Failed to fetch event: ${describeSupabaseError(error)}`);
     }
 
     return Event.fromDatabase(data as EventRow);
@@ -187,7 +187,7 @@ class Event {
       .limit(limit);
 
     if (error) {
-      throw new Error(`Failed to fetch upcoming events: ${error.message}`);
+      throw new Error(`Failed to fetch upcoming events: ${describeSupabaseError(error)}`);
     }
 
     return (data as EventRow[]).map((row) => Event.fromDatabase(row)!);
