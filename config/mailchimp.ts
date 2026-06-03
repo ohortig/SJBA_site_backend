@@ -88,6 +88,7 @@ export const addSubscriber = async (
   try {
     await client.lists.setListMember(listId, subscriberHash, {
       email_address: email,
+      status: 'subscribed',
       status_if_new: 'subscribed',
       merge_fields: {
         FNAME: firstName,
