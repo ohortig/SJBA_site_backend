@@ -1,4 +1,4 @@
-import { getSupabase } from '../config/supabase.js';
+import { describeSupabaseError, getSupabase } from '../config/supabase.js';
 import type {
   NewsletterSignupRow,
   NewsletterSignupData,
@@ -105,7 +105,7 @@ class NewsletterSignup {
       if (error.code === 'PGRST116') {
         return null; // Not found
       }
-      throw new Error(`Failed to fetch newsletter signup: ${error.message}`);
+      throw new Error(`Failed to fetch newsletter signup: ${describeSupabaseError(error)}`);
     }
 
     return NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
@@ -124,7 +124,7 @@ class NewsletterSignup {
       if (error.code === 'PGRST116') {
         return null; // Not found
       }
-      throw new Error(`Failed to fetch newsletter signup: ${error.message}`);
+      throw new Error(`Failed to fetch newsletter signup: ${describeSupabaseError(error)}`);
     }
 
     return NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
@@ -157,7 +157,7 @@ class NewsletterSignup {
         // Unique constraint violation
         throw new Error('Email is already subscribed to the newsletter');
       }
-      throw new Error(`Failed to create newsletter signup: ${error.message}`);
+      throw new Error(`Failed to create newsletter signup: ${describeSupabaseError(error)}`);
     }
 
     return NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
@@ -187,7 +187,7 @@ class NewsletterSignup {
         .single();
 
       if (error) {
-        throw new Error(`Failed to update newsletter signup: ${error.message}`);
+        throw new Error(`Failed to update newsletter signup: ${describeSupabaseError(error)}`);
       }
 
       // Update instance with returned data
@@ -208,7 +208,7 @@ class NewsletterSignup {
           // Unique constraint violation
           throw new Error('Email is already subscribed to the newsletter');
         }
-        throw new Error(`Failed to create newsletter signup: ${error.message}`);
+        throw new Error(`Failed to create newsletter signup: ${describeSupabaseError(error)}`);
       }
 
       // Update instance with returned data
@@ -236,7 +236,7 @@ class NewsletterSignup {
     const { data, error } = await query;
 
     if (error) {
-      throw new Error(`Failed to fetch newsletter signups: ${error.message}`);
+      throw new Error(`Failed to fetch newsletter signups: ${describeSupabaseError(error)}`);
     }
 
     return (data as NewsletterSignupRow[]).map((row) => NewsletterSignup.fromDatabase(row)!);
@@ -250,7 +250,7 @@ class NewsletterSignup {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      throw new Error(`Failed to count newsletter signups: ${error.message}`);
+      throw new Error(`Failed to count newsletter signups: ${describeSupabaseError(error)}`);
     }
 
     return count ?? 0;
@@ -264,7 +264,9 @@ class NewsletterSignup {
     ]);
 
     if (totalResult.error) {
-      throw new Error('Failed to fetch newsletter statistics');
+      throw new Error(
+        `Failed to fetch newsletter statistics: ${describeSupabaseError(totalResult.error)}`
+      );
     }
 
     // Get recent signups (last 30 days)
@@ -277,7 +279,7 @@ class NewsletterSignup {
       .gte('created_at', thirtyDaysAgo.toISOString());
 
     if (recentError) {
-      throw new Error('Failed to fetch recent signups');
+      throw new Error(`Failed to fetch recent signups: ${describeSupabaseError(recentError)}`);
     }
 
     return {

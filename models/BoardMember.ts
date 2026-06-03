@@ -1,4 +1,4 @@
-import { getSupabase } from '../config/supabase.js';
+import { describeSupabaseError, getSupabase } from '../config/supabase.js';
 import type { BoardMemberRow } from '../types/index.js';
 
 class BoardMember {
@@ -113,7 +113,7 @@ class BoardMember {
     const { data, error } = await query;
 
     if (error) {
-      throw new Error(`Failed to fetch board members: ${error.message}`);
+      throw new Error(`Failed to fetch board members: ${describeSupabaseError(error)}`);
     }
 
     return (data as BoardMemberRow[]).map((row) => BoardMember.fromDatabase(row)!);
@@ -128,7 +128,7 @@ class BoardMember {
       if (error.code === 'PGRST116') {
         return null;
       }
-      throw new Error(`Failed to fetch board member: ${error.message}`);
+      throw new Error(`Failed to fetch board member: ${describeSupabaseError(error)}`);
     }
 
     return BoardMember.fromDatabase(data as BoardMemberRow);
@@ -151,7 +151,7 @@ class BoardMember {
       .single();
 
     if (error) {
-      throw new Error(`Failed to create board member: ${error.message}`);
+      throw new Error(`Failed to create board member: ${describeSupabaseError(error)}`);
     }
 
     return BoardMember.fromDatabase(data as BoardMemberRow);
@@ -176,7 +176,7 @@ class BoardMember {
         .single();
 
       if (error) {
-        throw new Error(`Failed to update board member: ${error.message}`);
+        throw new Error(`Failed to update board member: ${describeSupabaseError(error)}`);
       }
 
       // Update instance with returned data
@@ -193,7 +193,7 @@ class BoardMember {
         .single();
 
       if (error) {
-        throw new Error(`Failed to create board member: ${error.message}`);
+        throw new Error(`Failed to create board member: ${describeSupabaseError(error)}`);
       }
 
       // Update instance with returned data
@@ -216,7 +216,7 @@ class BoardMember {
     const { error } = await supabase.from('board_members').delete().eq('id', this.id);
 
     if (error) {
-      throw new Error(`Failed to delete board member: ${error.message}`);
+      throw new Error(`Failed to delete board member: ${describeSupabaseError(error)}`);
     }
 
     return true;
@@ -230,7 +230,7 @@ class BoardMember {
       .select('*', { count: 'exact', head: true });
 
     if (error) {
-      throw new Error(`Failed to count board members: ${error.message}`);
+      throw new Error(`Failed to count board members: ${describeSupabaseError(error)}`);
     }
 
     return count ?? 0;

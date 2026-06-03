@@ -12,6 +12,8 @@ interface ErrorResponse {
   code?: string;
 }
 
+const isInternalServerError = (status: number): boolean => status >= 500;
+
 // Express error handlers must have 4 parameters for Express to recognize them
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const errorHandler = (err: AppError, req: Request, res: Response, _next: NextFunction): void => {
@@ -21,7 +23,17 @@ const errorHandler = (err: AppError, req: Request, res: Response, _next: NextFun
   // Log error
   logger.error({
     message: `Error: ${err.message}`,
-    error: err,
+    err: {
+      type: err.name,
+      message: err.message,
+      stack: err.stack,
+      code: err.code,
+      status,
+    },
+    request: {
+      method: req.method,
+      url: req.originalUrl,
+    },
   });
 
   // CORS error
@@ -42,13 +54,19 @@ const errorHandler = (err: AppError, req: Request, res: Response, _next: NextFun
     };
   }
 
+  if (isInternalServerError(status)) {
+    error = {
+      message: 'Internal server error',
+      status,
+      code: 'INTERNAL_SERVER_ERROR',
+    };
+  }
+
   res.status(error.status || 500).json({
     success: false,
     error: {
       message: error.message || 'Server Error',
       code: error.code || 'INTERNAL_SERVER_ERROR',
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      reqBody: req.body,
     },
   });
 };

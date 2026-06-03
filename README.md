@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![CI](https://github.com/ohortig/SJBA_site_backend/actions/workflows/ci.yml/badge.svg)](https://github.com/ohortig/SJBA_site_backend/actions/workflows/ci.yml)
 [![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?logo=vercel&logoColor=white)](https://api.nyu-sjba.org)
-[![Node.js](https://img.shields.io/badge/node-%3E%3D22.x-brightgreen)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/node-24.x-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 
 A Node.js/Express backend API for the Stern Jewish Business Association website.
@@ -12,43 +12,16 @@ A Node.js/Express backend API for the Stern Jewish Business Association website.
 **Live Frontend**: [nyu-sjba.org](https://nyu-sjba.org)
 **Status Page**: [status.nyu-sjba.org](https://status.nyu-sjba.org)
 
-> **Note:** This README will be updated soon with full information on local development and production deployment.
+## Documentation
+
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [SUPABASE.md](./SUPABASE.md)
+- [AGENTS.md](./AGENTS.md)
 
 ## API Documentation
 
-| URL                                                | Description              |
-| -------------------------------------------------- | ------------------------ |
-| [`/docs`](https://api.nyu-sjba.org/docs)           | Swagger UI               |
-| [`/docs.json`](https://api.nyu-sjba.org/docs.json) | Raw JSON spec for agents |
-
-Locally: `http://localhost:3000/docs`
-
-`GET /v1/events` supports explicit event-time sorting via `sort=startTime:asc` or `sort=startTime:desc`. The default is `startTime:asc`; see `/docs` for the full pagination and filtering contract.
-
-## Available Scripts
-
-- `npm run dev` - Start development server with hot reload (tsx watch)
-- `npm start` - Start production server
-- `npm run build` - Compile TypeScript
-- `npm run build:check` - Type-check without emitting
-- `npm run lint` - Run ESLint
-- `npm run lint:fix` - Run ESLint with auto-fix
-- `npm run format` - Format code with Prettier
-- `npm run format:check` - Check formatting without writing
-- `npm test` - Run Jest tests
-- `npm run seed` - Seed database with sample data
-- `npm run seed:clear` - Clear database
-
-> **Note:** `helmet` and `supertest` are included as dependencies for future implementation
-
-## Environment Notes
-
-- In `NODE_ENV=development`, rate limiting is disabled by default.
-- Set `ENABLE_RATE_LIMIT=true` to force rate limiting on locally when you want to test `429` handling.
-- Set `SKIP_STARTUP_CONNECTION_TESTS=true` to skip the startup Mailchimp and Supabase connectivity checks.
-- Set `DISABLE_EMAIL_SENDING=true` to let contact form flows work locally without sending outbound email.
-- Set `DISABLE_MAILCHIMP_SYNC=true` to let newsletter signups work locally without touching Mailchimp.
-- Set `LOG_LEVEL=silent` or `LOG_LEVEL=debug` to reduce or increase local logging verbosity.
+- [Swagger UI](https://api.nyu-sjba.org/docs)
+- [Raw JSON spec for agents](https://api.nyu-sjba.org/docs.json)
 
 ## Contact
 

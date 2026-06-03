@@ -7,9 +7,17 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-format:
-    name: Lint & Format Check
+  quality:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Lint
+            command: npm run lint
+          - name: Format
+            command: npm run format:check
 
     steps:
       - name: Checkout code
@@ -24,8 +32,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run ESLint
-        run: npm run lint
-
-      - name: Check Prettier formatting
-        run: npm run format:check
+      - name: Run ${{ matrix.name }}
+        run: ${{ matrix.command }}

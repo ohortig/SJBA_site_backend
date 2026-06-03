@@ -38,7 +38,6 @@ const options: swaggerJsdoc.Options = {
             message: { type: 'string' },
             code: { type: 'string' },
             details: { type: 'array', items: { type: 'object' } },
-            reqBody: { type: 'object', nullable: true },
           },
           required: ['message', 'code'],
         },
