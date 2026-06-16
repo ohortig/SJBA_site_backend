@@ -14,11 +14,14 @@ import { errorHandler, notFound, validateReferer } from './middleware/index.js';
 import {
   boardMembersRoutes,
   newsletterRoutes,
+  newsletterSignupsRoutes,
   eventsRoutes,
   contactRoutes,
+  contactRequestsRoutes,
   membersRoutes,
   semestersRoutes,
   siteConfigRoutes,
+  storageRoutes,
 } from './routes/index.js';
 
 import { logger, httpLogger } from './logger.js';
@@ -63,12 +66,12 @@ if (skipStartupConnectionTests) {
 // Note: Security headers are configured in vercel.json for edge-level performance
 
 // API Documentation (CDNs used for Vercel serverless compatibility)
-const swaggerHtml = `<!DOCTYPE html>
+const createSwaggerHtml = (specUrl: string, title: string): string => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>SJBA API Documentation</title>
+  <title>${title}</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.11.0/swagger-ui.min.css" />
   <style>
     body { margin: 0; padding: 0; }
@@ -82,7 +85,7 @@ const swaggerHtml = `<!DOCTYPE html>
   <script>
     window.onload = () => {
       window.ui = SwaggerUIBundle({
-        url: '/docs.json',
+        url: '${specUrl}',
         dom_id: '#swagger-ui',
         presets: [
           SwaggerUIBundle.presets.apis,
@@ -96,7 +99,7 @@ const swaggerHtml = `<!DOCTYPE html>
 </html>`;
 
 app.get('/docs', (_req: Request, res: Response): void => {
-  res.send(swaggerHtml);
+  res.send(createSwaggerHtml('/docs.json', 'SJBA API Documentation'));
 });
 
 app.get('/docs.json', (_req: Request, res: Response): void => {
@@ -253,11 +256,14 @@ app.get('/favicon.png', (_req: Request, res: Response): void => {
 // API Routes
 app.use('/v1/board-members', boardMembersRoutes);
 app.use('/v1/newsletter-sign-ups', newsletterRoutes);
+app.use('/v1/newsletter-signups', newsletterSignupsRoutes);
 app.use('/v1/events', eventsRoutes);
 app.use('/v1/contact', contactRoutes);
+app.use('/v1/contact-requests', contactRequestsRoutes);
 app.use('/v1/members', membersRoutes);
 app.use('/v1/semesters', semestersRoutes);
 app.use('/v1/site-config', siteConfigRoutes);
+app.use('/v1/storage', storageRoutes);
 
 // API version info endpoint
 app.get('/v1', (_req: Request, res: Response): void => {
