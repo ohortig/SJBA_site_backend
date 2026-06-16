@@ -89,31 +89,32 @@ router.post(
 
     // Now attempt database operation with rollback on failure
     try {
-      // Check if email already exists
-      let newsletterSignup = await NewsletterSignup.findByEmail(email);
-      let isNewSignup = false;
+      const newsletterSignup = await NewsletterSignup.create({
+        email,
+        first_name,
+        last_name,
+      });
 
-      if (newsletterSignup) {
-        // Update existing signup
-        newsletterSignup.firstName = first_name;
-        newsletterSignup.lastName = last_name;
-        await newsletterSignup.save();
-      } else {
-        // Create new signup
-        isNewSignup = true;
-        newsletterSignup = await NewsletterSignup.create({
-          email,
-          first_name,
-          last_name,
-        });
-      }
-
-      res.status(isNewSignup ? 201 : 200).json({
+      res.status(201).json({
         success: true,
         message: 'Successfully signed up for newsletter',
         data: newsletterSignup?.toJSON(),
       });
     } catch (dbError: unknown) {
+      if (
+        dbError instanceof Error &&
+        dbError.message === 'Email is already subscribed to the newsletter'
+      ) {
+        res.status(409).json({
+          success: false,
+          error: {
+            message: 'Email is already subscribed to the newsletter',
+            code: 'NEWSLETTER_SIGNUP_DUPLICATE',
+          },
+        });
+        return;
+      }
+
       // Database operation failed - attempt to rollback Mailchimp subscription
       logger.error({
         message: 'Critical: Database operation failed after successful Mailchimp subscription',

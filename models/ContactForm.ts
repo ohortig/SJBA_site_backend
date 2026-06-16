@@ -132,17 +132,13 @@ class ContactForm {
 
     const supabase = getSupabase();
 
-    const { data, error } = await supabase
-      .from('contact_requests')
-      .insert(form.toDatabase())
-      .select()
-      .single();
+    const { error } = await supabase.from('contact_requests').insert(form.toDatabase());
 
     if (error) {
       throw new Error(`Failed to create contact submission: ${describeSupabaseError(error)}`);
     }
 
-    return ContactForm.fromDatabase(data as ContactSubmissionRow);
+    return form;
   }
 
   /**
