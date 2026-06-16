@@ -2,6 +2,20 @@
 
 This backend repo owns SJBA Supabase configuration, migrations, local setup, storage buckets, and cloud snapshots. The frontend and admin dashboard should talk to the backend API; they should not own database migrations or privileged Supabase keys.
 
+## Public And Admin Access Model
+
+The public frontend uses the backend API and may also use Supabase public media URLs. Direct frontend/database access is intentionally narrow:
+
+- Public-read tables: `board_members`, `events`, `members`, `semesters`, `site_config`
+- Public insert-only tables: `contact_requests`, `newsletter_signups`
+- Frontend users must not read `contact_requests` or `newsletter_signups`
+- Frontend users must not update or delete any application table rows
+- Public storage buckets `board-headshots` and `event-flyers` are read-only for end users
+
+Admin writes go through authenticated backend resource endpoints, such as `POST /v1/events` and `PUT /v1/events/{id}`, that use `SUPABASE_SERVICE_ROLE_KEY` server-side after admin-token verification. Private admin collections are available at `/v1/contact-requests` and `/v1/newsletter-signups`. Admin bucket management is available at `/v1/storage/buckets` and `/v1/storage/buckets/{bucketId}/objects` for bucket listing, object upload, object replacement, rename/move, and deletion. Do not expose a Supabase `service_role` key or secret key to the frontend or admin browser bundle.
+
+Supabase Storage folders are virtual path prefixes, not standalone empty folder records. The admin panel should create folders by uploading objects under a prefix, and should use recursive move/delete only when it intentionally wants to affect every object below that prefix.
+
 ## Docs
 
 - [Local Supabase setup and cloud mirror](./supabase/docs/supabase-local.md)

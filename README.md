@@ -15,6 +15,7 @@ A Node.js/Express backend API for the Stern Jewish Business Association website.
 ## Documentation
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [ADMIN.md](./ADMIN.md)
 - [SUPABASE.md](./SUPABASE.md)
 - [AGENTS.md](./AGENTS.md)
 
