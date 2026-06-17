@@ -4,7 +4,7 @@ This document explains how the SJBA admin panel should authenticate admins, call
 
 ## Core Model
 
-The admin panel is a browser app, so it must never receive `SUPABASE_SERVICE_ROLE_KEY`.
+The admin panel is a browser app, so it must never receive `SUPABASE_SECRET_KEY`.
 
 Admins sign in with Supabase Auth using the normal public/publishable Supabase key. The admin panel then sends the Supabase access token to this backend:
 
@@ -12,7 +12,7 @@ Admins sign in with Supabase Auth using the normal public/publishable Supabase k
 Authorization: Bearer <supabase-access-token>
 ```
 
-The backend verifies that token with Supabase Auth and checks the authenticated user's `app_metadata`. If the user is an admin, the backend performs the privileged database or storage operation with the server-side Supabase service-role client.
+The backend verifies that token with Supabase Auth and checks the authenticated user's `app_metadata`. If the user is an admin, the backend performs the privileged database or storage operation with the server-side Supabase secret-key client.
 
 The flow is:
 
@@ -21,7 +21,7 @@ The flow is:
 3. Supabase returns a session containing an access token.
 4. Admin panel calls this backend with `Authorization: Bearer <access_token>`.
 5. Backend verifies the token and checks admin status from `app_metadata`.
-6. Backend runs the privileged action with `SUPABASE_SERVICE_ROLE_KEY`.
+6. Backend runs the privileged action with `SUPABASE_SECRET_KEY`.
 7. Backend returns the result to the admin panel.
 
 ## Admin Identity
@@ -52,7 +52,7 @@ Do not authorize admins from `user_metadata`. In Supabase, user metadata is user
 
 The admin repo should:
 
-- Use Supabase Auth in the browser with the public/publishable key, not the service-role key.
+- Use Supabase Auth in the browser with the public/publishable key, not the secret key.
 - Store the active Supabase session using the normal Supabase client behavior.
 - Send the session `access_token` to backend admin routes as a bearer token.
 - Configure its deployed origin in this backend's `ADMIN_URL` so CORS allows the admin panel.
@@ -62,7 +62,7 @@ The admin repo should:
 
 The admin panel should not:
 
-- Bundle `SUPABASE_SERVICE_ROLE_KEY`.
+- Bundle `SUPABASE_SECRET_KEY`.
 - Call Supabase tables directly for privileged writes.
 - Call Supabase Storage directly for privileged writes.
 - Use `user_metadata` to decide whether to show privileged controls.
@@ -129,7 +129,7 @@ The current backend accepts JSON uploads, so large files are constrained by the 
 Supabase has two separate layers in this project:
 
 - Public access control is enforced by database grants, row-level security policies, and storage policies.
-- Admin operations are performed by this backend with the service-role client after backend admin-token verification.
+- Admin operations are performed by this backend with the secret-key client after backend admin-token verification.
 
 That means public users can only do what the Supabase policies allow. Admins are not relying on broad browser-side Supabase permissions; they are relying on this backend to verify the admin token and then perform privileged work server-side.
 
@@ -137,7 +137,7 @@ The important security boundary is:
 
 ```text
 admin browser: Supabase access token only
-backend server: SUPABASE_SERVICE_ROLE_KEY
+backend server: SUPABASE_SECRET_KEY
 ```
 
 ## Docs

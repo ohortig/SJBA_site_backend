@@ -35,8 +35,8 @@ Use this sequence when setting up a complete local Supabase that mirrors cloud s
    ```
 4. Map only the values this backend actually reads from the `supabase start` output into `.env`:
    - `Project URL` -> `SUPABASE_URL`
-   - `Publishable` -> `SUPABASE_ANON_KEY`
-   - `Secret` -> `SUPABASE_SERVICE_ROLE_KEY` for backend-only admin routes
+   - `Publishable` -> `SUPABASE_PUBLISHABLE_KEY`
+   - `Secret` -> `SUPABASE_SECRET_KEY` for backend-only admin routes
 5. Do not add the CLI Studio, Mailpit, MCP, or S3 values to `.env` unless code is added that reads them.
 6. Keep local safety switches enabled unless intentionally testing external providers:
    ```env

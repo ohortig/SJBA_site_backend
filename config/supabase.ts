@@ -121,8 +121,8 @@ export const initializeSupabase = (): SupabaseClient => {
     throw error;
   }
 
-  if (!process.env.SUPABASE_ANON_KEY) {
-    const error = new Error('SUPABASE_ANON_KEY is required but not provided');
+  if (!process.env.SUPABASE_PUBLISHABLE_KEY) {
+    const error = new Error('SUPABASE_PUBLISHABLE_KEY is required but not provided');
     logger.error({
       message: 'Missing Supabase configuration',
       error: error.message,
@@ -131,7 +131,7 @@ export const initializeSupabase = (): SupabaseClient => {
   }
 
   try {
-    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY, {
       auth: {
         persistSession: false, // Server-side doesn't need session persistence
       },
@@ -183,11 +183,11 @@ export const getSupabaseAdmin = (): SupabaseClient => {
     throw new Error('SUPABASE_URL is required but not provided');
   }
 
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for admin database operations');
+  if (!process.env.SUPABASE_SECRET_KEY) {
+    throw new Error('SUPABASE_SECRET_KEY is required for admin database operations');
   }
 
-  supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+  supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,

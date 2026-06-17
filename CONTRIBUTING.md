@@ -48,9 +48,8 @@ Production provider accounts/keys for Supabase, Resend, and Mailchimp are not re
    ```
 
    - `Project URL` -> `SUPABASE_URL`
-   - `Publishable` -> `SUPABASE_ANON_KEY`
-
-   Do not add the CLI `Secret`, Studio, Mailpit, MCP, or S3 values to `.env` unless code is added that reads them.
+   - `Publishable` -> `SUPABASE_PUBLISHABLE_KEY`
+   - `Secret` -> `SUPABASE_SECRET_KEY` for backend-only admin routes
 
 4. **Reset local Supabase and apply downloaded cloud data (see [SUPABASE.md](./SUPABASE.md))**
 
