@@ -65,13 +65,15 @@
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "supertest": "^7.1.3",
-    "ts-jest": "^27.0.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.55.0"
   },
   "engines": {
     "node": "24.x"
+  },
+  "overrides": {
+    "js-yaml": "^4.2.0"
   },
   "lint-staged": {
     "*.{ts,js,mjs}": [
