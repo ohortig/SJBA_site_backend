@@ -1,89 +1,10 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 
-const accessModel = {
-  publicFrontend: {
-    tables: {
-      read: ['board_members', 'events', 'members', 'semesters', 'site_config'],
-      insertOnly: ['contact_requests', 'newsletter_signups'],
-      noRead: ['contact_requests', 'newsletter_signups'],
-      noUpdate: [
-        'board_members',
-        'contact_requests',
-        'events',
-        'members',
-        'newsletter_signups',
-        'semesters',
-        'site_config',
-      ],
-      noDelete: [
-        'board_members',
-        'contact_requests',
-        'events',
-        'members',
-        'newsletter_signups',
-        'semesters',
-        'site_config',
-      ],
-    },
-    buckets: {
-      read: ['board-headshots', 'event-flyers'],
-      noUpload: ['board-headshots', 'event-flyers'],
-      noUpdate: ['board-headshots', 'event-flyers'],
-      noDelete: ['board-headshots', 'event-flyers'],
-    },
-  },
-  adminPanel: {
-    status:
-      'Admin CRUD is implemented on the same resource endpoints as public reads, with privileged methods gated by Supabase admin auth.',
-    intendedPath:
-      'Admin writes go through authenticated backend admin endpoints that use a privileged server-side Supabase client; never expose a secret key to a browser.',
-    tables: {
-      read: [
-        'board_members',
-        'contact_requests',
-        'events',
-        'members',
-        'newsletter_signups',
-        'semesters',
-        'site_config',
-      ],
-      write: [
-        'board_members',
-        'events',
-        'members',
-        'semesters',
-        'contact_requests',
-        'newsletter_signups',
-      ],
-    },
-    buckets: {
-      read: ['all buckets through admin-only backend storage routes'],
-      write: ['all buckets through admin-only backend storage routes'],
-    },
-  },
-} as const;
-
 const accessDescription = [
   'Backend API for the Stern Jewish Business Association (SJBA) website.',
   '',
-  'Public/end-user access model:',
-  '- Readable tables: `board_members`, `events`, `members`, `semesters`, `site_config`.',
-  '- Insert-only tables: `contact_requests`, `newsletter_signups`.',
-  '- Private from frontend reads: `contact_requests`, `newsletter_signups`.',
-  '- No frontend table updates or deletes are allowed.',
-  '- Public storage buckets are read-only for end users: `board-headshots`, `event-flyers`.',
-  '',
-  'Admin access model:',
-  '- Admin CRUD is implemented on the same resource endpoints as public reads, with privileged methods gated by Supabase admin auth.',
-  '- Examples: `GET /v1/events` is public; `POST /v1/events`, `PUT /v1/events/{id}`, and `DELETE /v1/events/{id}` are admin-only.',
-  '- Private collections use model-backed admin endpoints: `/v1/contact-requests` and `/v1/newsletter-signups`.',
-  '- Admins may need to read all application tables, including `contact_requests` and `newsletter_signups`.',
-  '- Admins may create, update, and delete model-backed tables: `board_members`, `events`, `members`, `semesters`, `contact_requests`, and `newsletter_signups`.',
-  '- Admins can list buckets and upload, replace, rename/move, and delete objects through `/v1/storage/*` admin-only backend routes.',
-  '- Admin writes go through authenticated backend admin endpoints using a privileged server-side Supabase client.',
-  '- Never expose a Supabase secret key to a browser, frontend repo, or admin frontend bundle.',
-  '',
-  'All currently documented operations are public unless explicitly tagged or described as admin-only.',
+  'Public endpoints are available for website and end-user integrations.',
+  'Endpoints tagged Admin require bearer auth with admin privileges.',
 ].join('\n');
 
 const adminRequestBody = {
@@ -106,8 +27,7 @@ const uuidPathParameter = (description: string): Record<string, unknown> => ({
 const adminListOperation = (tag: string, summary: string): Record<string, unknown> => ({
   tags: [tag, 'Admin'],
   summary,
-  description:
-    'Admin-only. Requires a Supabase access token for a user whose app_metadata marks them as admin.',
+  description: 'Requires bearer auth with admin privileges.',
   security: [{ bearerAuth: [] }],
   responses: {
     '200': {
@@ -125,7 +45,7 @@ const adminListOperation = (tag: string, summary: string): Record<string, unknow
         },
       },
     },
-    '401': { description: 'Missing or invalid Supabase access token' },
+    '401': { description: 'Missing or invalid bearer token' },
     '403': { description: 'Authenticated user is not an admin' },
     '429': { description: 'Too Many Requests' },
   },
@@ -134,7 +54,7 @@ const adminListOperation = (tag: string, summary: string): Record<string, unknow
 const adminCreateOperation = (tag: string, summary: string): Record<string, unknown> => ({
   tags: [tag, 'Admin'],
   summary,
-  description: 'Admin-only. Accepts camelCase API fields or matching snake_case database fields.',
+  description: 'Requires bearer auth with admin privileges.',
   security: [{ bearerAuth: [] }],
   requestBody: adminRequestBody,
   responses: {
@@ -152,7 +72,7 @@ const adminCreateOperation = (tag: string, summary: string): Record<string, unkn
         },
       },
     },
-    '401': { description: 'Missing or invalid Supabase access token' },
+    '401': { description: 'Missing or invalid bearer token' },
     '403': { description: 'Authenticated user is not an admin' },
     '429': { description: 'Too Many Requests' },
   },
@@ -165,8 +85,7 @@ const adminGetOperation = (
 ): Record<string, unknown> => ({
   tags: [tag, 'Admin'],
   summary,
-  description:
-    'Admin-only. Requires a Supabase access token for a user whose app_metadata marks them as admin.',
+  description: 'Requires bearer auth with admin privileges.',
   security: [{ bearerAuth: [] }],
   parameters: [uuidPathParameter(idDescription)],
   responses: {
@@ -185,7 +104,7 @@ const adminGetOperation = (
       },
     },
     '400': { description: 'Invalid UUID' },
-    '401': { description: 'Missing or invalid Supabase access token' },
+    '401': { description: 'Missing or invalid bearer token' },
     '403': { description: 'Authenticated user is not an admin' },
     '404': { description: 'Resource row not found' },
     '429': { description: 'Too Many Requests' },
@@ -199,7 +118,7 @@ const adminUpdateOperation = (
 ): Record<string, unknown> => ({
   tags: [tag, 'Admin'],
   summary,
-  description: 'Admin-only. Accepts camelCase API fields or matching snake_case database fields.',
+  description: 'Requires bearer auth with admin privileges.',
   security: [{ bearerAuth: [] }],
   parameters: [uuidPathParameter(idDescription)],
   requestBody: adminRequestBody,
@@ -219,7 +138,7 @@ const adminUpdateOperation = (
       },
     },
     '400': { description: 'Validation error or empty update' },
-    '401': { description: 'Missing or invalid Supabase access token' },
+    '401': { description: 'Missing or invalid bearer token' },
     '403': { description: 'Authenticated user is not an admin' },
     '404': { description: 'Resource row not found' },
     '429': { description: 'Too Many Requests' },
@@ -233,8 +152,7 @@ const adminDeleteOperation = (
 ): Record<string, unknown> => ({
   tags: [tag, 'Admin'],
   summary,
-  description:
-    'Admin-only. Requires a Supabase access token for a user whose app_metadata marks them as admin.',
+  description: 'Requires bearer auth with admin privileges.',
   security: [{ bearerAuth: [] }],
   parameters: [uuidPathParameter(idDescription)],
   responses: {
@@ -253,7 +171,7 @@ const adminDeleteOperation = (
       },
     },
     '400': { description: 'Invalid UUID' },
-    '401': { description: 'Missing or invalid Supabase access token' },
+    '401': { description: 'Missing or invalid bearer token' },
     '403': { description: 'Authenticated user is not an admin' },
     '404': { description: 'Resource row not found' },
     '429': { description: 'Too Many Requests' },
@@ -268,7 +186,6 @@ const options: swaggerJsdoc.Options = {
       version: '1.0.0',
       description: accessDescription,
     },
-    'x-sjba-access-model': accessModel,
     servers: [
       {
         url: 'https://api.nyu-sjba.org',
@@ -290,13 +207,11 @@ const options: swaggerJsdoc.Options = {
       { name: 'Site Config', description: 'Public: dynamic site configuration settings' },
       {
         name: 'Admin',
-        description:
-          'Admin: authenticated CRUD routes for model-backed database objects. Requires a Supabase access token for a user whose app_metadata marks them as admin.',
+        description: 'Authenticated routes. Requires bearer auth with admin privileges.',
       },
       {
         name: 'Storage',
-        description:
-          'Admin: authenticated Supabase Storage bucket and object management. Public end users read public bucket URLs directly and cannot write storage objects.',
+        description: 'Authenticated storage management routes.',
       },
     ],
     components: {
@@ -304,7 +219,7 @@ const options: swaggerJsdoc.Options = {
         bearerAuth: {
           type: 'http',
           scheme: 'bearer',
-          bearerFormat: 'Supabase access token',
+          bearerFormat: 'JWT',
         },
       },
       schemas: {
@@ -809,7 +724,7 @@ const options: swaggerJsdoc.Options = {
           tags: ['Events'],
           summary: 'Get all events (paginated, filterable)',
           description:
-            'Public: returns visible events with filters, sorting, and pagination. Admin: when called with a valid admin bearer token, returns all event rows through the server-side privileged client so hidden events can be managed.',
+            'Public requests return visible events. Admin requests require bearer auth with admin privileges and can return all events.',
           parameters: [
             {
               name: 'page',
@@ -975,7 +890,7 @@ const options: swaggerJsdoc.Options = {
           tags: ['Events'],
           summary: 'Get a single event by ID',
           description:
-            'Public: returns the event only if it is publicly visible. Admin: when called with a valid admin bearer token, can return any event row by ID.',
+            'Public requests return the event only if it is visible. Admin requests require bearer auth with admin privileges.',
           parameters: [
             {
               name: 'id',
@@ -1399,8 +1314,7 @@ const options: swaggerJsdoc.Options = {
         get: {
           tags: ['Storage', 'Admin'],
           summary: 'Admin: list Supabase storage buckets',
-          description:
-            'Admin-only. Lists Supabase Storage buckets through the backend privileged server-side client. Public end users should not call this endpoint.',
+          description: 'Requires bearer auth with admin privileges.',
           security: [{ bearerAuth: [] }],
           responses: {
             '200': {
@@ -1421,7 +1335,7 @@ const options: swaggerJsdoc.Options = {
                 },
               },
             },
-            '401': { description: 'Missing or invalid Supabase access token' },
+            '401': { description: 'Missing or invalid bearer token' },
             '403': { description: 'Authenticated user is not an admin or referer is forbidden' },
             '429': { description: 'Too Many Requests' },
           },
@@ -1431,8 +1345,7 @@ const options: swaggerJsdoc.Options = {
         get: {
           tags: ['Storage', 'Admin'],
           summary: 'Admin: list bucket objects',
-          description:
-            'Admin-only. Lists files and virtual folders in a Supabase Storage bucket. Walk deeper folder prefixes with additional calls using the returned folder paths.',
+          description: 'Requires bearer auth with admin privileges.',
           security: [{ bearerAuth: [] }],
           parameters: [
             {
@@ -1494,7 +1407,7 @@ const options: swaggerJsdoc.Options = {
               },
             },
             '400': { description: 'Invalid prefix' },
-            '401': { description: 'Missing or invalid Supabase access token' },
+            '401': { description: 'Missing or invalid bearer token' },
             '403': { description: 'Authenticated user is not an admin or referer is forbidden' },
             '429': { description: 'Too Many Requests' },
           },
@@ -1502,8 +1415,7 @@ const options: swaggerJsdoc.Options = {
         post: {
           tags: ['Storage', 'Admin'],
           summary: 'Admin: upload bucket object',
-          description:
-            'Admin-only. Uploads a base64-encoded file to Supabase Storage through the backend privileged server-side client. Empty folders are not native Supabase Storage objects; create folder paths by uploading an object under that prefix.',
+          description: 'Requires bearer auth with admin privileges.',
           security: [{ bearerAuth: [] }],
           parameters: [
             {
@@ -1525,7 +1437,7 @@ const options: swaggerJsdoc.Options = {
           responses: {
             '201': { description: 'Object uploaded' },
             '400': { description: 'Invalid path or missing content' },
-            '401': { description: 'Missing or invalid Supabase access token' },
+            '401': { description: 'Missing or invalid bearer token' },
             '403': { description: 'Authenticated user is not an admin or referer is forbidden' },
             '429': { description: 'Too Many Requests' },
           },
@@ -1533,8 +1445,7 @@ const options: swaggerJsdoc.Options = {
         put: {
           tags: ['Storage', 'Admin'],
           summary: 'Admin: replace or rename/move bucket object',
-          description:
-            'Admin-only. Replaces object bytes, renames/moves an object, or does both in one request. With `recursive=true`, `path` and `newPath` are treated as virtual folder prefixes and every object under the prefix is moved.',
+          description: 'Requires bearer auth with admin privileges.',
           security: [{ bearerAuth: [] }],
           parameters: [
             {
@@ -1556,7 +1467,7 @@ const options: swaggerJsdoc.Options = {
           responses: {
             '200': { description: 'Object replaced or moved' },
             '400': { description: 'Invalid path or missing update operation' },
-            '401': { description: 'Missing or invalid Supabase access token' },
+            '401': { description: 'Missing or invalid bearer token' },
             '403': { description: 'Authenticated user is not an admin or referer is forbidden' },
             '429': { description: 'Too Many Requests' },
           },
@@ -1564,8 +1475,7 @@ const options: swaggerJsdoc.Options = {
         delete: {
           tags: ['Storage', 'Admin'],
           summary: 'Admin: delete bucket objects',
-          description:
-            'Admin-only. Deletes one or more objects. With `recursive=true`, each provided path is treated as a virtual folder prefix and every object under it is deleted.',
+          description: 'Requires bearer auth with admin privileges.',
           security: [{ bearerAuth: [] }],
           parameters: [
             {
@@ -1587,7 +1497,7 @@ const options: swaggerJsdoc.Options = {
           responses: {
             '200': { description: 'Objects deleted' },
             '400': { description: 'Invalid path or missing path list' },
-            '401': { description: 'Missing or invalid Supabase access token' },
+            '401': { description: 'Missing or invalid bearer token' },
             '403': { description: 'Authenticated user is not an admin or referer is forbidden' },
             '429': { description: 'Too Many Requests' },
           },
