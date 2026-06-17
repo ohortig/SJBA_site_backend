@@ -52,10 +52,11 @@ Production provider accounts/keys for Supabase, Resend, and Mailchimp are not re
 
    Do not add the CLI `Secret`, Studio, Mailpit, MCP, or S3 values to `.env` unless code is added that reads them.
 
-4. **Reset local Supabase**
+4. **Reset local Supabase and apply downloaded cloud data (see [SUPABASE.md](./SUPABASE.md))**
 
    ```bash
    npm run supabase:reset
+   npm run supabase:cloud:apply
    ```
 
 5. **Start development server**

@@ -19,9 +19,9 @@
 ## Docs And Developer Setup
 
 - If you add, rename, or change environment variables, update `.env.example`.
-- If you change setup steps, local development behavior, scripts, or notable runtime behavior, update `README.md`.
+- If you change setup steps, local development behavior, scripts, or notable runtime behavior, keep it discoverable from `README.md`; update the detailed linked docs when they are the better home for the content.
 - Supabase docs start at `SUPABASE.md`. Local setup and cloud snapshot workflow belongs in `supabase/docs/supabase-local.md`; migration and production drift workflow belongs in `supabase/docs/supabase-migrations.md`.
-- Prefer keeping local-development affordances discoverable. If you add a dev flag or bypass, document it in both `.env.example` and `README.md`.
+- Prefer keeping local-development affordances discoverable. If you add a dev flag or bypass, document it in `.env.example` and in the relevant setup docs linked from `README.md`.
 
 ## Complete Local Supabase Mirror
 
@@ -36,7 +36,8 @@ Use this sequence when setting up a complete local Supabase that mirrors cloud s
 4. Map only the values this backend actually reads from the `supabase start` output into `.env`:
    - `Project URL` -> `SUPABASE_URL`
    - `Publishable` -> `SUPABASE_ANON_KEY`
-5. Do not add the CLI `Secret`, Studio, Mailpit, MCP, or S3 values to `.env` unless code is added that reads them.
+   - `Secret` -> `SUPABASE_SERVICE_ROLE_KEY` for backend-only admin routes
+5. Do not add the CLI Studio, Mailpit, MCP, or S3 values to `.env` unless code is added that reads them.
 6. Keep local safety switches enabled unless intentionally testing external providers:
    ```env
    SKIP_STARTUP_CONNECTION_TESTS=true

@@ -1,4 +1,9 @@
-import express, { type Request, type Response } from 'express';
+import express, {
+  type NextFunction,
+  type Request,
+  type RequestHandler,
+  type Response,
+} from 'express';
 import {
   param,
   query,
@@ -8,7 +13,16 @@ import {
   type ValidationError,
 } from 'express-validator';
 import { Event } from '../models/index.js';
-import { asyncHandler, validateInput, requireAuthenticatedUser } from '../middleware/index.js';
+import { asyncHandler, requireAdminUser, validateInput } from '../middleware/index.js';
+import {
+  adminIdValidation,
+  createAdminCreateHandler,
+  createAdminDeleteHandler,
+  createAdminGetHandler,
+  createAdminListHandler,
+  createAdminUpdateHandler,
+  handleAdminValidationErrors,
+} from './adminResource.js';
 
 const router = express.Router();
 
@@ -43,11 +57,30 @@ const handleValidationErrors = (req: Request, res: Response, next: express.NextF
   next();
 };
 
+const optionalAdminRead = (handler: RequestHandler): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.get('Authorization')) {
+      next();
+      return;
+    }
+
+    void requireAdminUser(req, res, (error?: unknown) => {
+      if (error) {
+        next(error);
+        return;
+      }
+
+      handler(req, res, next);
+    });
+  };
+};
+
 // @desc    Get all events with pagination and filtering
 // @route   GET /v1/events
 // @access  Public
 router.get(
   '/',
+  optionalAdminRead(createAdminListHandler('events')),
   [
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
     query('limit')
@@ -104,6 +137,11 @@ router.get(
   })
 );
 
+// @desc    Create event
+// @route   POST /v1/events
+// @access  Admin
+router.post('/', requireAdminUser, createAdminCreateHandler('events'));
+
 // @desc    Get upcoming events
 // @route   GET /v1/events/upcoming
 // @access  Public
@@ -134,6 +172,7 @@ router.get(
 // @access  Public
 router.get(
   '/:id',
+  optionalAdminRead(createAdminGetHandler('events')),
   [param('id').isUUID().withMessage('Invalid event ID')] as ValidationChain[],
   handleValidationErrors,
   asyncHandler(async (req: Request, res: Response) => {
@@ -157,20 +196,26 @@ router.get(
   })
 );
 
-// @desc    Create new event (placeholder)
-// @route   POST /v1/events
+// @desc    Update event
+// @route   PUT /v1/events/:id
 // @access  Admin
-router.post('/', requireAuthenticatedUser, (req: Request, res: Response): void => {
-  // placeholder logic - will be implemented in the future
-  res.json({
-    name: 'Create new event',
-    description: 'Admin only endpoint - will be implemented in the future',
-    user: {
-      id: req.authUser?.id,
-      email: req.authUser?.email,
-      role: req.authUser?.role,
-    },
-  });
-});
+router.put(
+  '/:id',
+  requireAdminUser,
+  adminIdValidation,
+  handleAdminValidationErrors,
+  createAdminUpdateHandler('events')
+);
+
+// @desc    Delete event
+// @route   DELETE /v1/events/:id
+// @access  Admin
+router.delete(
+  '/:id',
+  requireAdminUser,
+  adminIdValidation,
+  handleAdminValidationErrors,
+  createAdminDeleteHandler('events')
+);
 
 export default router;

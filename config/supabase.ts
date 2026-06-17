@@ -2,6 +2,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '../logger.js';
 
 let supabase: SupabaseClient | null = null;
+let supabaseAdmin: SupabaseClient | null = null;
 const SUPABASE_FETCH_TIMEOUT_MS = 5000;
 
 export type SupabaseEnvironment = 'local' | 'production' | 'unknown';
@@ -171,6 +172,45 @@ export const getSupabase = (): SupabaseClient => {
     return initializeSupabase();
   }
   return supabase;
+};
+
+export const getSupabaseAdmin = (): SupabaseClient => {
+  if (supabaseAdmin) {
+    return supabaseAdmin;
+  }
+
+  if (!process.env.SUPABASE_URL) {
+    throw new Error('SUPABASE_URL is required but not provided');
+  }
+
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required for admin database operations');
+  }
+
+  supabaseAdmin = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+    global: {
+      fetch: (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), SUPABASE_FETCH_TIMEOUT_MS);
+
+        return fetch(input, {
+          ...init,
+          signal: controller.signal,
+        }).finally(() => clearTimeout(timeoutId));
+      },
+    },
+  });
+
+  logger.info({
+    message: 'Supabase admin client initialized successfully',
+    supabaseEnvironment: getSupabaseEnvironment(process.env.SUPABASE_URL),
+  });
+
+  return supabaseAdmin;
 };
 
 // Test the connection

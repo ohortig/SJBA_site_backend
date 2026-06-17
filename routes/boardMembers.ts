@@ -7,7 +7,14 @@ import {
   type ValidationError,
 } from 'express-validator';
 import { BoardMember } from '../models/index.js';
-import { asyncHandler, validateInput } from '../middleware/index.js';
+import { asyncHandler, requireAdminUser, validateInput } from '../middleware/index.js';
+import {
+  adminIdValidation,
+  createAdminCreateHandler,
+  createAdminDeleteHandler,
+  createAdminUpdateHandler,
+  handleAdminValidationErrors,
+} from './adminResource.js';
 
 const router = express.Router();
 
@@ -50,6 +57,13 @@ router.get(
 );
 
 /*
+  @desc    Create board member
+  @route   POST /v1/board-members
+  @access  Admin
+*/
+router.post('/', requireAdminUser, createAdminCreateHandler('board-members'));
+
+/*
   @desc    Get single board member
   @route   GET /v1/board-members/:id
   @access  Public
@@ -77,6 +91,32 @@ router.get(
       data: BoardMember.toJSON(boardMember.toDatabase()),
     });
   })
+);
+
+/*
+  @desc    Update board member
+  @route   PUT /v1/board-members/:id
+  @access  Admin
+*/
+router.put(
+  '/:id',
+  requireAdminUser,
+  adminIdValidation,
+  handleAdminValidationErrors,
+  createAdminUpdateHandler('board-members')
+);
+
+/*
+  @desc    Delete board member
+  @route   DELETE /v1/board-members/:id
+  @access  Admin
+*/
+router.delete(
+  '/:id',
+  requireAdminUser,
+  adminIdValidation,
+  handleAdminValidationErrors,
+  createAdminDeleteHandler('board-members')
 );
 
 export default router;

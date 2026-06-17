@@ -21,6 +21,7 @@ Copy only these values from `supabase start` into `.env`:
 
 - `Project URL` -> `SUPABASE_URL`
 - `Publishable` -> `SUPABASE_ANON_KEY`
+- `Secret` -> `SUPABASE_SERVICE_ROLE_KEY` for backend-only admin routes
 
 The local `SUPABASE_URL` default is:
 
@@ -34,7 +35,7 @@ The default local database URL used by the cloud snapshot apply script is:
 postgresql://postgres:postgres@127.0.0.1:54322/postgres
 ```
 
-The CLI also prints `Secret`, database URL, Studio, Mailpit, MCP, and S3 values. Do not add them to `.env` for the current backend; this repo does not read them.
+The CLI also prints database URL, Studio, Mailpit, MCP, and S3 values. Do not add them to `.env` for the current backend; this repo does not read them.
 
 Keep local safety switches enabled unless intentionally testing external providers:
 

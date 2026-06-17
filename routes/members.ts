@@ -1,35 +1,18 @@
 import express, { type Request, type Response } from 'express';
-import {
-  body,
-  validationResult,
-  type ValidationChain,
-  type Result,
-  type ValidationError,
-} from 'express-validator';
 import { Member } from '../models/index.js';
-import { asyncHandler, validateInput } from '../middleware/index.js';
+import { asyncHandler, requireAdminUser, validateInput } from '../middleware/index.js';
+import {
+  adminIdValidation,
+  createAdminCreateHandler,
+  createAdminDeleteHandler,
+  createAdminUpdateHandler,
+  handleAdminValidationErrors,
+} from './adminResource.js';
 
 const router = express.Router();
 
 // Apply input validation middleware
 router.use(validateInput);
-
-// Validation middleware
-const handleValidationErrors = (req: Request, res: Response, next: express.NextFunction): void => {
-  const errors: Result<ValidationError> = validationResult(req);
-  if (!errors.isEmpty()) {
-    res.status(400).json({
-      success: false,
-      error: {
-        message: 'Validation failed',
-        code: 'VALIDATION_ERROR',
-        details: errors.array(),
-      },
-    });
-    return;
-  }
-  next();
-};
 
 /*
   @desc    Get all members
@@ -50,83 +33,36 @@ router.get(
 );
 
 /*
-  @desc    Create a new member
+  @desc    Create member
   @route   POST /v1/members
-  @access  Public
+  @access  Admin
 */
-router.post(
-  '/',
-  [
-    body('firstName')
-      .trim()
-      .notEmpty()
-      .withMessage('First name is required')
-      .isLength({ max: 100 })
-      .withMessage('First name cannot exceed 100 characters'),
-    body('lastName')
-      .trim()
-      .notEmpty()
-      .withMessage('Last name is required')
-      .isLength({ max: 100 })
-      .withMessage('Last name cannot exceed 100 characters'),
-    body('semester').trim().notEmpty().withMessage('Semester is required'),
-    body('email')
-      .optional({ values: 'null' })
-      .isEmail()
-      .withMessage('Email must be a valid email address'),
-  ] as ValidationChain[],
-  handleValidationErrors,
-  asyncHandler(async (req: Request, res: Response) => {
-    const { firstName, lastName, semester, email } = req.body as {
-      firstName: string;
-      lastName: string;
-      semester: string;
-      email?: string;
-    };
+router.post('/', requireAdminUser, createAdminCreateHandler('members'));
 
-    try {
-      const member = await Member.create({
-        first_name: firstName,
-        last_name: lastName,
-        semester: semester,
-        email: email ?? null,
-      });
+/*
+  @desc    Update member
+  @route   PUT /v1/members/:id
+  @access  Admin
+*/
+router.put(
+  '/:id',
+  requireAdminUser,
+  adminIdValidation,
+  handleAdminValidationErrors,
+  createAdminUpdateHandler('members')
+);
 
-      res.status(201).json({
-        success: true,
-        data: member ? Member.toJSON(member.toDatabase()) : null,
-      });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : '';
-
-      // The model throws "Invalid semester: ..." when the semester doesn't exist
-      if (message.startsWith('Invalid semester')) {
-        res.status(400).json({
-          success: false,
-          error: {
-            message: 'Invalid semester',
-            code: 'INVALID_SEMESTER',
-          },
-        });
-        return;
-      }
-
-      // The model throws "Validation failed: ..." for input validation errors
-      if (message.startsWith('Validation failed')) {
-        res.status(400).json({
-          success: false,
-          error: {
-            message: 'Member validation failed',
-            code: 'MEMBER_VALIDATION_ERROR',
-          },
-        });
-        return;
-      }
-
-      // Re-throw unexpected errors to be handled by the global error handler
-      throw error;
-    }
-  })
+/*
+  @desc    Delete member
+  @route   DELETE /v1/members/:id
+  @access  Admin
+*/
+router.delete(
+  '/:id',
+  requireAdminUser,
+  adminIdValidation,
+  handleAdminValidationErrors,
+  createAdminDeleteHandler('members')
 );
 
 export default router;

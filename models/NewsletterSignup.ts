@@ -146,11 +146,7 @@ class NewsletterSignup {
 
     const supabase = getSupabase();
 
-    const { data, error } = await supabase
-      .from('newsletter_signups')
-      .insert(signup.toDatabase())
-      .select()
-      .single();
+    const { error } = await supabase.from('newsletter_signups').insert(signup.toDatabase());
 
     if (error) {
       if (error.code === '23505') {
@@ -160,7 +156,7 @@ class NewsletterSignup {
       throw new Error(`Failed to create newsletter signup: ${describeSupabaseError(error)}`);
     }
 
-    return NewsletterSignup.fromDatabase(data as NewsletterSignupRow);
+    return signup;
   }
 
   async save(): Promise<NewsletterSignup> {
