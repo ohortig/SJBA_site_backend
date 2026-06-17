@@ -36,7 +36,7 @@ const accessModel = {
     status:
       'Admin CRUD is implemented on the same resource endpoints as public reads, with privileged methods gated by Supabase admin auth.',
     intendedPath:
-      'Admin writes go through authenticated backend admin endpoints that use a privileged server-side Supabase client; never expose a service_role key to a browser.',
+      'Admin writes go through authenticated backend admin endpoints that use a privileged server-side Supabase client; never expose a secret key to a browser.',
     tables: {
       read: [
         'board_members',
@@ -81,7 +81,7 @@ const accessDescription = [
   '- Admins may create, update, and delete model-backed tables: `board_members`, `events`, `members`, `semesters`, `contact_requests`, and `newsletter_signups`.',
   '- Admins can list buckets and upload, replace, rename/move, and delete objects through `/v1/storage/*` admin-only backend routes.',
   '- Admin writes go through authenticated backend admin endpoints using a privileged server-side Supabase client.',
-  '- Never expose a Supabase `service_role` key or secret key to a browser, frontend repo, or admin frontend bundle.',
+  '- Never expose a Supabase secret key to a browser, frontend repo, or admin frontend bundle.',
   '',
   'All currently documented operations are public unless explicitly tagged or described as admin-only.',
 ].join('\n');
@@ -1400,7 +1400,7 @@ const options: swaggerJsdoc.Options = {
           tags: ['Storage', 'Admin'],
           summary: 'Admin: list Supabase storage buckets',
           description:
-            'Admin-only. Lists Supabase Storage buckets through the backend service-role client. Public end users should not call this endpoint.',
+            'Admin-only. Lists Supabase Storage buckets through the backend privileged server-side client. Public end users should not call this endpoint.',
           security: [{ bearerAuth: [] }],
           responses: {
             '200': {
@@ -1503,7 +1503,7 @@ const options: swaggerJsdoc.Options = {
           tags: ['Storage', 'Admin'],
           summary: 'Admin: upload bucket object',
           description:
-            'Admin-only. Uploads a base64-encoded file to Supabase Storage through the backend service-role client. Empty folders are not native Supabase Storage objects; create folder paths by uploading an object under that prefix.',
+            'Admin-only. Uploads a base64-encoded file to Supabase Storage through the backend privileged server-side client. Empty folders are not native Supabase Storage objects; create folder paths by uploading an object under that prefix.',
           security: [{ bearerAuth: [] }],
           parameters: [
             {

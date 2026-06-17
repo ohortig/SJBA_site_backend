@@ -20,8 +20,8 @@ npm run supabase:start
 Copy only these values from `supabase start` into `.env`:
 
 - `Project URL` -> `SUPABASE_URL`
-- `Publishable` -> `SUPABASE_ANON_KEY`
-- `Secret` -> `SUPABASE_SERVICE_ROLE_KEY` for backend-only admin routes
+- `Publishable` -> `SUPABASE_PUBLISHABLE_KEY`
+- `Secret` -> `SUPABASE_SECRET_KEY` for backend-only admin routes
 
 The local `SUPABASE_URL` default is:
 
