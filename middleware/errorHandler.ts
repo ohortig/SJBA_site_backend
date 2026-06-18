@@ -54,7 +54,7 @@ const errorHandler = (err: AppError, req: Request, res: Response, _next: NextFun
     };
   }
 
-  if (isInternalServerError(status)) {
+  if (isInternalServerError(error.status || status)) {
     error = {
       message: 'Internal server error',
       status,

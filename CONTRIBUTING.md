@@ -103,6 +103,9 @@ Locally: `http://localhost:3000/docs`
 - `npm run format` - Format code with Prettier
 - `npm run format:check` - Check formatting without writing
 - `npm test` - Run Jest tests
+- `npm run test:watch` - Run Jest in watch mode
+- `npm run test:coverage` - Run Jest with coverage locally
+- `npm run test:ci` - Run the CI test command
 - `npm run supabase:start` - Start local Supabase
 - `npm run supabase:stop` - Stop local Supabase
 - `npm run supabase:reset` - Reset local Supabase database to migrations
@@ -118,14 +121,22 @@ This repo uses Husky and lint-staged. After `npm install`, the `prepare` script 
 
 This project uses Jest with Supertest for backend API tests.
 
-- Put tests next to the code they cover or in the existing test directories used by the codebase.
-- Use unit tests for reusable utilities, validators, request/response mapping, and non-trivial date/time logic.
-- Use Supertest for endpoint behavior, middleware behavior, and API status code coverage.
-- Mock Supabase, Resend, and Mailchimp when tests should not call external services.
-- Prefer assertions on response shape, status codes, validation messages, and side effects over broad snapshots.
-- Run `npm test` before opening a PR. Run `npm run build:check` before finishing backend changes.
+- Test files use `*.test.ts` and usually live next to the code they cover.
+- Use Supertest for route, middleware, status-code, and response-shape coverage.
+- Use unit tests for models, config helpers, validators, scripts, and data mapping.
+- Mock Supabase, Resend, and Mailchimp. The default suite must not require Docker, local Supabase, or provider keys.
+- Prefer concrete status, response, query-call, and side-effect assertions over snapshots.
 
-Expected coverage for this project is practical rather than exhaustive. New features should include tests for meaningful branching behavior, validation, API transformations, middleware behavior, and error states. Purely static documentation changes usually do not need new tests unless they change the public API contract.
+Common commands:
+
+```bash
+npm test
+npm run test:watch
+npm run test:coverage
+npm run test:ci
+```
+
+Before opening a PR, run `npm run build:check` and `npm run test:ci`. Add or update tests when route behavior, middleware, request/response shapes, model mapping, provider behavior, or meaningful error handling changes.
 
 ### Environment Notes
 

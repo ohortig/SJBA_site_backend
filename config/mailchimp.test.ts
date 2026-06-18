@@ -39,17 +39,30 @@ describe('addSubscriber', () => {
   it('subscribes existing archived members during website signup', async () => {
     const { addSubscriber } = await import('./mailchimp.js');
 
-    await addSubscriber('oh2065@stern.nyu.edu', 'Omer', 'Hortig');
+    await addSubscriber('jdoe@stern.nyu.edu', 'John', 'Doe');
 
     expect(setListMember).toHaveBeenCalledWith('test-list-id', expect.any(String), {
-      email_address: 'oh2065@stern.nyu.edu',
+      email_address: 'jdoe@stern.nyu.edu',
       status: 'subscribed',
       status_if_new: 'subscribed',
       merge_fields: {
-        FNAME: 'Omer',
-        LNAME: 'Hortig',
-        MMERGE6: 'Omer Hortig',
+        FNAME: 'John',
+        LNAME: 'Doe',
+        MMERGE6: 'John Doe',
       },
     });
+  });
+
+  it('skips external sync when Mailchimp is disabled', async () => {
+    process.env.DISABLE_MAILCHIMP_SYNC = 'true';
+    const { addSubscriber, removeSubscriber, testMailchimpConnection } =
+      await import('./mailchimp.js');
+
+    await addSubscriber('jdoe@stern.nyu.edu', 'John', 'Doe');
+    await removeSubscriber('jdoe@stern.nyu.edu');
+    await testMailchimpConnection();
+
+    expect(setListMember).not.toHaveBeenCalled();
+    expect(updateListMemberTags).not.toHaveBeenCalled();
   });
 });
