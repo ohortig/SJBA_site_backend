@@ -24,6 +24,14 @@ const uuidPathParameter = (description: string): Record<string, unknown> => ({
   description,
 });
 
+const keyPathParameter = (description: string): Record<string, unknown> => ({
+  name: 'id',
+  in: 'path',
+  required: true,
+  schema: { type: 'string', pattern: '^[A-Za-z0-9_.:-]+$' },
+  description,
+});
+
 const adminListOperation = (tag: string, summary: string): Record<string, unknown> => ({
   tags: [tag, 'Admin'],
   summary,
@@ -366,6 +374,7 @@ const options: swaggerJsdoc.Options = {
           properties: {
             key: { type: 'string', example: 'mentorship_application_open' },
             value: { type: 'string', example: 'true' },
+            updatedAt: { type: 'string', format: 'date-time' },
           },
         },
 
@@ -1511,13 +1520,16 @@ const options: swaggerJsdoc.Options = {
         get: {
           tags: ['Site Config'],
           summary: 'Get site configuration values',
+          description:
+            'Public requests require a comma-separated keys query parameter. Admin requests with bearer auth can omit keys and receive all site configuration rows.',
           parameters: [
             {
               name: 'keys',
               in: 'query',
-              required: true,
+              required: false,
               schema: { type: 'string' },
-              description: 'Comma-separated list of configuration keys to retrieve',
+              description:
+                'Comma-separated list of configuration keys to retrieve. Required for public requests.',
               example: 'mentorship_application_open,mentorship_application_url',
             },
           ],
@@ -1565,6 +1577,94 @@ const options: swaggerJsdoc.Options = {
                 'application/json': { schema: { $ref: '#/components/schemas/ApiError429' } },
               },
             },
+          },
+        },
+        post: adminCreateOperation('Site Config', 'Admin: create site configuration value'),
+      },
+      '/v1/site-config/{id}': {
+        get: {
+          tags: ['Site Config', 'Admin'],
+          summary: 'Admin: get site configuration value',
+          description: 'Requires bearer auth with admin privileges.',
+          security: [{ bearerAuth: [] }],
+          parameters: [keyPathParameter('Site configuration key')],
+          responses: {
+            '200': {
+              description: 'Site configuration value',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      data: { $ref: '#/components/schemas/SiteConfigItem' },
+                    },
+                  },
+                },
+              },
+            },
+            '400': { description: 'Invalid site configuration key' },
+            '401': { description: 'Missing or invalid bearer token' },
+            '403': { description: 'Authenticated user is not an admin' },
+            '404': { description: 'Site configuration value not found' },
+            '429': { description: 'Too Many Requests' },
+          },
+        },
+        put: {
+          tags: ['Site Config', 'Admin'],
+          summary: 'Admin: update site configuration value',
+          description: 'Requires bearer auth with admin privileges.',
+          security: [{ bearerAuth: [] }],
+          parameters: [keyPathParameter('Site configuration key')],
+          requestBody: adminRequestBody,
+          responses: {
+            '200': {
+              description: 'Site configuration value updated',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      data: { $ref: '#/components/schemas/SiteConfigItem' },
+                    },
+                  },
+                },
+              },
+            },
+            '400': { description: 'Validation error or empty update' },
+            '401': { description: 'Missing or invalid bearer token' },
+            '403': { description: 'Authenticated user is not an admin' },
+            '404': { description: 'Site configuration value not found' },
+            '429': { description: 'Too Many Requests' },
+          },
+        },
+        delete: {
+          tags: ['Site Config', 'Admin'],
+          summary: 'Admin: delete site configuration value',
+          description: 'Requires bearer auth with admin privileges.',
+          security: [{ bearerAuth: [] }],
+          parameters: [keyPathParameter('Site configuration key')],
+          responses: {
+            '200': {
+              description: 'Site configuration value deleted',
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    properties: {
+                      success: { type: 'boolean', example: true },
+                      data: { $ref: '#/components/schemas/SiteConfigItem' },
+                    },
+                  },
+                },
+              },
+            },
+            '400': { description: 'Invalid site configuration key' },
+            '401': { description: 'Missing or invalid bearer token' },
+            '403': { description: 'Authenticated user is not an admin' },
+            '404': { description: 'Site configuration value not found' },
+            '429': { description: 'Too Many Requests' },
           },
         },
       },

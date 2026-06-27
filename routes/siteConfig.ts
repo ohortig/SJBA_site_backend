@@ -1,4 +1,9 @@
-import express, { type Request, type Response } from 'express';
+import express, {
+  type NextFunction,
+  type Request,
+  type RequestHandler,
+  type Response,
+} from 'express';
 import {
   query,
   validationResult,
@@ -7,11 +12,38 @@ import {
   type ValidationError,
 } from 'express-validator';
 import { getSupabase } from '../config/supabase.js';
-import { asyncHandler, validateInput } from '../middleware/index.js';
+import { asyncHandler, requireAdminUser, validateInput } from '../middleware/index.js';
+import {
+  adminSiteConfigKeyValidation,
+  createAdminCreateHandler,
+  createAdminDeleteHandler,
+  createAdminGetHandler,
+  createAdminListHandler,
+  createAdminUpdateHandler,
+  handleAdminValidationErrors,
+} from './adminResource.js';
 
 const router = express.Router();
 
 router.use(validateInput);
+
+const optionalAdminRead = (handler: RequestHandler): RequestHandler => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    if (!req.get('Authorization')) {
+      next();
+      return;
+    }
+
+    void requireAdminUser(req, res, (error?: unknown) => {
+      if (error) {
+        next(error);
+        return;
+      }
+
+      handler(req, res, next);
+    });
+  };
+};
 
 const handleValidationErrors = (req: Request, res: Response, next: express.NextFunction): void => {
   const errors: Result<ValidationError> = validationResult(req);
@@ -35,6 +67,7 @@ const handleValidationErrors = (req: Request, res: Response, next: express.NextF
 */
 router.get(
   '/',
+  optionalAdminRead(createAdminListHandler('site-config')),
   [
     query('keys').notEmpty().withMessage('Missing required query parameter: keys').isString(),
   ] as ValidationChain[],
@@ -75,12 +108,49 @@ router.get(
 );
 
 /*
-  TODO: Future implementation
-  @desc    Update site configuration values
+  @desc    Create site configuration value
   @route   POST /v1/site-config
-  @access  Private/Admin
-  @note    This endpoint is planned for creation once the internal admin portal 
-           is set up to allow authenticated users to make changes to the site config.
+  @access  Admin
 */
+router.post('/', requireAdminUser, createAdminCreateHandler('site-config'));
+
+/*
+  @desc    Get single site configuration value
+  @route   GET /v1/site-config/:id
+  @access  Admin
+*/
+router.get(
+  '/:id',
+  requireAdminUser,
+  adminSiteConfigKeyValidation,
+  handleAdminValidationErrors,
+  createAdminGetHandler('site-config')
+);
+
+/*
+  @desc    Update site configuration value
+  @route   PUT /v1/site-config/:id
+  @access  Admin
+*/
+router.put(
+  '/:id',
+  requireAdminUser,
+  adminSiteConfigKeyValidation,
+  handleAdminValidationErrors,
+  createAdminUpdateHandler('site-config')
+);
+
+/*
+  @desc    Delete site configuration value
+  @route   DELETE /v1/site-config/:id
+  @access  Admin
+*/
+router.delete(
+  '/:id',
+  requireAdminUser,
+  adminSiteConfigKeyValidation,
+  handleAdminValidationErrors,
+  createAdminDeleteHandler('site-config')
+);
 
 export default router;

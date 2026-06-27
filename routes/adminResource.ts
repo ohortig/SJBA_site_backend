@@ -9,11 +9,14 @@ export type AdminResourceKey =
   | 'members'
   | 'semesters'
   | 'contact-requests'
-  | 'newsletter-signups';
+  | 'newsletter-signups'
+  | 'site-config';
 
 interface AdminResourceConfig {
   table: string;
   fields: Record<string, string>;
+  primaryKey?: string;
+  updateTimestampColumn?: string;
   orderBy?: string[];
   notFoundMessage: string;
   notFoundCode: string;
@@ -138,10 +141,33 @@ const resources: Record<AdminResourceKey, AdminResourceConfig> = {
     notFoundMessage: 'Newsletter signup not found',
     notFoundCode: 'NEWSLETTER_SIGNUP_NOT_FOUND',
   },
+  'site-config': {
+    table: 'site_config',
+    primaryKey: 'key',
+    updateTimestampColumn: 'updated_at',
+    fields: {
+      key: 'key',
+      value: 'value',
+      updatedAt: 'updated_at',
+      updated_at: 'updated_at',
+    },
+    orderBy: ['key'],
+    notFoundMessage: 'Site configuration item not found',
+    notFoundCode: 'SITE_CONFIG_NOT_FOUND',
+  },
 };
 
 export const adminIdValidation = [
   param('id').isUUID().withMessage('Invalid resource ID'),
+] as ValidationChain[];
+
+export const adminSiteConfigKeyValidation = [
+  param('id')
+    .trim()
+    .notEmpty()
+    .withMessage('Invalid site configuration key')
+    .matches(/^[A-Za-z0-9_.:-]+$/)
+    .withMessage('Invalid site configuration key'),
 ] as ValidationChain[];
 
 export const handleAdminValidationErrors = (
@@ -184,7 +210,7 @@ const toDatabasePayload = (
   const payload: Record<string, unknown> = {};
 
   for (const [requestField, column] of Object.entries(resource.fields)) {
-    if (requestField === 'id') {
+    if (requestField === 'id' || (mode === 'update' && column === (resource.primaryKey ?? 'id'))) {
       continue;
     }
     if (Object.prototype.hasOwnProperty.call(body, requestField)) {
@@ -198,6 +224,10 @@ const toDatabasePayload = (
       payload.created_at ??= now;
     }
     payload.updated_at ??= now;
+  }
+
+  if (resource.updateTimestampColumn) {
+    payload[resource.updateTimestampColumn] ??= new Date().toISOString();
   }
 
   return payload;
@@ -251,10 +281,11 @@ export const createAdminGetHandler = (resourceKey: AdminResourceKey) =>
   asyncHandler(async (req: Request, res: Response) => {
     const resource = getResource(resourceKey);
     const supabase = getSupabaseAdmin();
+    const primaryKey = resource.primaryKey ?? 'id';
     const result = (await supabase
       .from(resource.table)
       .select('*')
-      .eq('id', req.params.id as string)
+      .eq(primaryKey, req.params.id as string)
       .single()) as AdminQueryResult;
 
     if (result.error) {
@@ -308,10 +339,11 @@ export const createAdminUpdateHandler = (resourceKey: AdminResourceKey) =>
     }
 
     const supabase = getSupabaseAdmin();
+    const primaryKey = resource.primaryKey ?? 'id';
     const result = (await supabase
       .from(resource.table)
       .update(payload)
-      .eq('id', req.params.id as string)
+      .eq(primaryKey, req.params.id as string)
       .select('*')
       .single()) as AdminQueryResult;
 
@@ -333,10 +365,11 @@ export const createAdminDeleteHandler = (resourceKey: AdminResourceKey) =>
   asyncHandler(async (req: Request, res: Response) => {
     const resource = getResource(resourceKey);
     const supabase = getSupabaseAdmin();
+    const primaryKey = resource.primaryKey ?? 'id';
     const result = (await supabase
       .from(resource.table)
       .delete()
-      .eq('id', req.params.id as string)
+      .eq(primaryKey, req.params.id as string)
       .select('*')
       .single()) as AdminQueryResult;
 
