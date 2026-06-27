@@ -429,14 +429,22 @@ describe('site-config route', () => {
     data: [{ key: 'heroTitle', value: 'SJBA' }],
     error: null,
   });
+  const siteConfigAdminQuery = createSupabaseQueryMock({
+    data: [{ key: 'heroTitle', value: 'SJBA', updated_at: '2026-06-01T00:00:00.000Z' }],
+    error: null,
+  });
 
   beforeEach(() => {
     jest.resetModules();
     jest.clearAllMocks();
     mockMiddleware();
     jest.unstable_mockModule('../config/supabase.js', () => ({
+      describeSupabaseError: (error: unknown) => String(error),
       getSupabase: jest.fn(() => ({
         from: jest.fn(() => siteConfigQuery),
+      })),
+      getSupabaseAdmin: jest.fn(() => ({
+        from: jest.fn(() => siteConfigAdminQuery),
       })),
     }));
   });
@@ -462,5 +470,30 @@ describe('site-config route', () => {
       });
 
     expect(siteConfigQuery.in).toHaveBeenCalledWith('key', ['heroTitle', 'footerText']);
+  });
+
+  it('uses the admin list path when an authorization header is present', async () => {
+    const app = await buildApp('./siteConfig.js', '/v1/site-config');
+
+    await request(app)
+      .get('/v1/site-config')
+      .set('Authorization', 'Bearer admin-token')
+      .expect(200)
+      .expect(({ body }) => {
+        expect(body).toEqual({
+          success: true,
+          count: 1,
+          data: [
+            {
+              key: 'heroTitle',
+              value: 'SJBA',
+              updatedAt: '2026-06-01T00:00:00.000Z',
+            },
+          ],
+        });
+      });
+
+    expect(siteConfigAdminQuery.order).toHaveBeenCalledWith('key', { ascending: true });
+    expect(siteConfigQuery.in).not.toHaveBeenCalled();
   });
 });

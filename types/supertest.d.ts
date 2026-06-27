@@ -22,6 +22,8 @@ declare module 'supertest' {
   export interface SuperTest {
     get(path: string): TestRequest;
     post(path: string): TestRequest;
+    put(path: string): TestRequest;
+    delete(path: string): TestRequest;
   }
 
   export default function request(app: Application): SuperTest;
